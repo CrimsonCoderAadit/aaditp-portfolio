@@ -32,13 +32,14 @@ import SaberDisplay from "./SaberDisplay";
 import CabinetWorkshop from "./CabinetWorkshop";
 import MakerCart from "./MakerCart";
 import StarClock from "./StarClock";
-import AdaptiveResolution from "./AdaptiveResolution";
+import QualityGovernor from "./QualityGovernor";
 import TextureSharpness from "./TextureSharpness";
 import ShadowCadence from "./ShadowCadence";
 import { startup } from "./startup";
 import type { RoomPixels } from "./roomAssets/surfaces";
 import { RoomSurfacesProvider } from "./roomAssets/RoomSurfaces";
 import { heroWallsPainted } from "./roomAssets/murals";
+import { onSceneCover, sceneCovered } from "./roomInteractions";
 import { ABOUT_POSITION, ABOUT_TURN, ACHIEVEMENTS_POSITION, ACHIEVEMENTS_TURN, CITY_GROUP_POSITION, CONTACT_POSITION, CONTACT_TURN, RESEARCH_POSITION, RESEARCH_TURN, SKILLS_POSITION, SKILLS_TURN } from "./districtLayout";
 
 /** Begin deterministic surface baking alongside the Canvas boot frame. */
@@ -63,15 +64,24 @@ void pendingPixels?.catch(() => {});
 /** A failed or stalled mural never holds the poster up longer than this. */
 const WALLS_WAIT_MS = 8000;
 
+/** The poster stays up until the live scene draws steadily: a first frame can
+ * still be uploading textures or finishing programs, so the hero is announced
+ * only after a few back-to-back frames each under this, or at the latest after
+ * WARM_FRAMES frames or WARM_MS, so a slow machine never waits on it. */
+const STEADY_MS = 50, STEADY_FRAMES = 3, WARM_FRAMES = 10, WARM_MS = 1500;
+
 /** Renders the scene itself (priority 1 takes over the canvas's render) so the
  * first frame waits for the hero's walls and for every program to compile in
- * parallel, instead of compiling them one by one inside that frame. Announces
- * the hero ready one animation frame after that first frame, when it is on screen. */
+ * parallel, instead of compiling them one by one inside that frame. While a
+ * full-screen game covers the room nothing is drawn at all; the canvas keeps
+ * its last picture and the GPU is left to the game. */
 function HeroFrame() {
   const get = useThree((state) => state.get);
   const invalidate = useThree((state) => state.invalidate);
   const [walls, setWalls] = useState(false);
   const done = useRef(false);
+  const warm = useRef({ start: 0, last: 0, frames: 0, steady: 0 });
+  useEffect(() => onSceneCover(() => { if (!sceneCovered()) invalidate(); }), [invalidate]);
   const stage = useRef<"waiting" | "compiling" | "live">("waiting");
   useEffect(() => {
     let alive = true;
@@ -92,10 +102,16 @@ function HeroFrame() {
       void gl.compileAsync(scene, camera).catch(() => {}).then(() => { stage.current = "live"; invalidate(); });
       return;
     }
-    if (stage.current === "compiling") return;
+    if (stage.current === "compiling" || (done.current && sceneCovered())) return;
     gl.render(scene, camera);
     if (done.current) return;
+    const w = warm.current, now = performance.now();
+    if (!w.start) w.start = now;
+    else w.steady = now - w.last < STEADY_MS ? w.steady + 1 : 0;
+    w.last = now;
+    if (++w.frames < WARM_FRAMES && w.steady < STEADY_FRAMES && now - w.start < WARM_MS) { invalidate(); return; }
     done.current = true;
+    performance.measure("studio:warm-frames", { start: w.start, end: now, detail: w.frames });
     requestAnimationFrame(() => startup("ready"));
   }, 1);
   return null;
@@ -117,7 +133,7 @@ export default function PortfolioWorld() {
   return (
     <>
       <HeroFrame />
-      <AdaptiveResolution />
+      <QualityGovernor />
       <TextureSharpness />
       <ShadowCadence />
       <StarClock />

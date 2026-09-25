@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useDecorativeLights } from "./quality";
 import { Piece, useAssembled } from "./roomAssets/RoomSurfaces";
 import { RoomSwitch, useCoveDimmer, useSwitchedLamp } from "./RoomSwitches";
 import {
@@ -22,6 +23,7 @@ export default function RoomDetails() {
   const [lx, ly, lz] = lamp.bulb;
   const bulb: [number, number, number] = [FLOOR_LAMP_AT.at[0] + lx * METRE, ROOM.floor + ly * METRE, FLOOR_LAMP_AT.at[2] + lz * METRE];
   const [floorShade, floorLightRef] = useSwitchedLamp("floorLamp", 2.2);
+  const lamps = useDecorativeLights();
   useCoveDimmer();
   return (
     <group name="room-details">
@@ -32,7 +34,7 @@ export default function RoomDetails() {
       <Piece name="desk extras" parts={desk} at={onFloor(DESK_AT)} turn={DESK_AT.turn} scale={METRE} />
       <Piece name="bedside extras" parts={bedside} at={onFloor(BEDSIDE_AT)} turn={BEDSIDE_AT.turn} scale={METRE} />
       {/* Third warm practical, lighting the maker corner; short range like the others. */}
-      <pointLight ref={floorLightRef} position={bulb} intensity={2.2} distance={3.2} decay={2} color="#ffc684" />
+      <pointLight visible={lamps} ref={floorLightRef} position={bulb} intensity={2.2} distance={3.2} decay={2} color="#ffc684" />
       <RoomSwitch name="floor lamp switch" toggle="floorLamp" at={bulb} radius={.42} from={["workstation", "room"]} />
       <RoomSwitch name="cove dimmer" toggle="coveDimmed" at={COVE_SWITCH} radius={.3} halo={.5} from={["room"]} />
     </group>

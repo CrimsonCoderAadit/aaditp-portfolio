@@ -1,6 +1,9 @@
-import { useEffect, useMemo } from "react";
-import { BoxGeometry, CanvasTexture, CylinderGeometry, MeshStandardMaterial, PlaneGeometry, SRGBColorSpace } from "three";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCursor } from "@react-three/drei";
+import { BoxGeometry, CanvasTexture, CylinderGeometry, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, SRGBColorSpace } from "three";
 import { useThree } from "@react-three/fiber";
+import { useSceneTransition } from "./SceneTransition";
+import { markCityExplored } from "./cityHint";
 import { DISTRICTS, type DistrictName } from "./cityMasterplan";
 import { CITY_GROUP_POSITION, TABLETOP_Y } from "./districtLayout";
 import { VIEWPOINTS } from "./viewpoints";
@@ -20,6 +23,32 @@ const FLAGS: Record<DistrictName, { label: string; accent: string; at: [number, 
   contact: { label: "CONTACT", accent: "#7fd6e6", at: [-.6, .6], pole: .74, size: 1.3 },
 };
 const FLAG = { w: .5, h: .155, depth: .008 };
+const GLOW = .38, HOVER_GLOW = .5;
+/** The flag's hit volume: its cloth with a small margin, never the pole or plate. */
+const HIT = { w: FLAG.w + .04, h: FLAG.h + .05, depth: .06 };
+
+/** One invisible box over a flag. Clicking it enters the district through the
+ * same `enter` its building calls; hovering brightens only this flag. */
+function FlagHit({ name, material, geometry, hitMaterial }: { name: DistrictName; material: MeshStandardMaterial; geometry: BoxGeometry; hitMaterial: MeshBasicMaterial }) {
+  const { mode, enter } = useSceneTransition();
+  const invalidate = useThree((state) => state.invalidate);
+  const [hovered, setHovered] = useState(false);
+  const live = hovered && mode === "workbench";
+  useCursor(live);
+  const face = useRef<MeshStandardMaterial | null>(null);
+  useLayoutEffect(() => { face.current = material; }, [material]);
+  useEffect(() => { if (face.current) face.current.emissiveIntensity = live ? HOVER_GLOW : GLOW; invalidate(); }, [live, invalidate]);
+  useEffect(() => {
+    const reset = () => setHovered(false);
+    window.addEventListener("blur", reset);
+    return () => window.removeEventListener("blur", reset);
+  }, []);
+  if (mode !== "workbench") return null;
+  return <mesh name={`${name} flag hit`} geometry={geometry} material={hitMaterial} scale={[HIT.w, HIT.h, HIT.depth]}
+    onPointerOver={(event) => { event.stopPropagation(); setHovered(true); markCityExplored(); }}
+    onPointerOut={() => setHovered(false)}
+    onClick={(event) => { event.stopPropagation(); setHovered(false); enter(name); }} />;
+}
 
 function flagTexture(label: string, accent: string, anisotropy: number) {
   const canvas = document.createElement("canvas");
@@ -41,14 +70,14 @@ function flagTexture(label: string, accent: string, anisotropy: number) {
 
 /** Physical district flags: a round plate with a stud, a grey pole, a cap and a
  * flat flag carrying the district's name on a dark field with its accent at the
- * hoist. One shared design; each turned to face the hero camera. Scenery only:
- * the districts keep every pointer event. */
+ * hoist. One shared design; each turned to face the hero camera. In the room
+ * overview each flag is also a way into its district, exactly like its building. */
 export default function DistrictFlags() {
   const anisotropy = useThree((state) => state.gl.capabilities.getMaxAnisotropy());
   const kit = useMemo(() => {
     const flags = (Object.keys(FLAGS) as DistrictName[]).map((name) => {
       const texture = flagTexture(FLAGS[name].label, FLAGS[name].accent, anisotropy);
-      return { name, texture, material: new MeshStandardMaterial({ map: texture, emissiveMap: texture, emissive: "#ffffff", emissiveIntensity: .38, roughness: .55 }) };
+      return { name, texture, material: new MeshStandardMaterial({ map: texture, emissiveMap: texture, emissive: "#ffffff", emissiveIntensity: GLOW, roughness: .55 }) };
     });
     return {
       flags,
@@ -61,11 +90,12 @@ export default function DistrictFlags() {
       grey: new MeshStandardMaterial({ color: "#a3a8ad", roughness: .42 }),
       dark: new MeshStandardMaterial({ color: "#2a2e36", roughness: .45 }),
       edge: new MeshStandardMaterial({ color: "#151923", roughness: .55 }),
+      hit: new MeshBasicMaterial({ visible: false }),
     };
   }, [anisotropy]);
   useEffect(() => () => {
     kit.flags.forEach(({ texture, material }) => { texture.dispose(); material.dispose(); });
-    [kit.plate, kit.stud, kit.pole, kit.cap, kit.cloth, kit.face, kit.grey, kit.dark, kit.edge].forEach((resource) => resource.dispose());
+    [kit.plate, kit.stud, kit.pole, kit.cap, kit.cloth, kit.face, kit.grey, kit.dark, kit.edge, kit.hit].forEach((resource) => resource.dispose());
   }, [kit]);
 
   const [camX, , camZ] = VIEWPOINTS.city.position;
@@ -87,6 +117,7 @@ export default function DistrictFlags() {
               <mesh geometry={kit.cloth} material={kit.edge} scale={[FLAG.w, FLAG.h, FLAG.depth]} castShadow raycast={noRaycast} />
               <mesh geometry={kit.face} material={material} position={[0, 0, FLAG.depth / 2 + .0005]} scale={[FLAG.w, FLAG.h, 1]} raycast={noRaycast} />
               <mesh geometry={kit.face} material={material} position={[0, 0, -FLAG.depth / 2 - .0005]} rotation={[0, Math.PI, 0]} scale={[FLAG.w, FLAG.h, 1]} raycast={noRaycast} />
+              <FlagHit name={name} material={material} geometry={kit.cloth} hitMaterial={kit.hit} />
             </group>
           </group>
         );

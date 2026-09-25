@@ -159,7 +159,7 @@ export function SceneTransitionProvider({ children }: { children: ReactNode }) {
   const advance = useCallback((delta: number) => {
     const t = timeline.current;
     if (modeRef.current.startsWith("entering-") || modeRef.current.startsWith("leaving-")) {
-      t.elapsed = Math.min(t.duration, t.elapsed + Math.min(delta, .05));
+      t.elapsed = Math.min(t.duration, t.elapsed + Math.min(delta, .1));
       t.progress = modeRef.current.startsWith("entering-") ? t.elapsed / t.duration : 1 - t.elapsed / t.duration;
       if (closing.current.section) closing.current.progress = 1 - t.elapsed / t.duration;
     }

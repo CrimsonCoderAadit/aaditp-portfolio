@@ -1,4 +1,5 @@
 import { CylinderGeometry, MeshStandardMaterial } from "three";
+import { registerDetail } from "./brickGeometry/moldedEdges";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { finishMaterials } from "./materialClasses";
 import type { BrickPart } from "./BrickInstances";
@@ -26,6 +27,8 @@ const BASE = SITE_PAD_TOP - .001, ROAD = .030, MARK = .036, KERB = .054, WALK = 
  * so moving a district or a street moves the ground with it. */
 export function createCityInfrastructureKit() {
   const brick = new RoundedBoxGeometry(1, 1, 1, 2, .025);
+  // Lower tiers lay the ground with a one-step chamfer until a district is entered.
+  registerDetail(brick, () => new RoundedBoxGeometry(1, 1, 1, 1, .025));
   const stud = new CylinderGeometry(.027, .029, .018, 12);
   const materials = {
     asphalt: new MeshStandardMaterial({ color: "#363c3e", roughness: .46 }),

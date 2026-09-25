@@ -4,7 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { Suspense, lazy } from "react";
 import { PCFSoftShadowMap, SRGBColorSpace, NeutralToneMapping } from "three";
 import { VIEWPOINTS } from "./viewpoints";
-import { QUALITY } from "./quality";
+import { INITIAL, quality } from "./quality";
 
 const loadWorld = () => import("./PortfolioWorld");
 const PortfolioWorld = lazy(loadWorld);
@@ -14,10 +14,12 @@ export default function PortfolioScene() {
   return (
     <Canvas
       shadows={{ type: PCFSoftShadowMap }}
-      dpr={[1, QUALITY.maxDpr]}
+      // The starting tier's resolution; QualityGovernor adjusts it from measured frames.
+      dpr={typeof window === "undefined" ? 1 : Math.min(window.devicePixelRatio || 1, INITIAL.dpr)}
       frameloop="demand"
       camera={{ position: VIEWPOINTS.city.position, fov: VIEWPOINTS.city.fov, near: .15, far: 260 }}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMapping: NeutralToneMapping, toneMappingExposure: .9, outputColorSpace: SRGBColorSpace }}
+      // Multisampling is fixed at context creation: off only where emergency rendering was the first guess.
+      gl={{ antialias: quality.get().initial !== "emergency", alpha: true, powerPreference: "high-performance", toneMapping: NeutralToneMapping, toneMappingExposure: .9, outputColorSpace: SRGBColorSpace }}
       onCreated={({ gl }) => {
         performance.mark("studio:webgl-created");
         gl.setClearColor("#05060a", 0);

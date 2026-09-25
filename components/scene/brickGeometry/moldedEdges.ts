@@ -1,4 +1,4 @@
-import { Box3, Float32BufferAttribute, Material, MeshDepthMaterial, RGBADepthPacking, Sphere, Vector3 } from "three";
+import { Box3, BoxGeometry, BufferGeometry, Float32BufferAttribute, Material, MeshDepthMaterial, RGBADepthPacking, Sphere, Vector3 } from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 export const EDGE_RADIUS = .003;
@@ -59,5 +59,49 @@ export function createMoldedBoxGeometry(segments = 2) {
   const depth = withMoldedEdges(new MeshDepthMaterial({ depthPacking: RGBADepthPacking }));
   geometry.userData.moldedDepth = depth;
   geometry.addEventListener("dispose", () => depth.dispose());
+  registerDetail(geometry, boxBuffers);
   return geometry;
+}
+
+/** Detail levels. From the room's own viewpoints a brick is a few pixels
+ * wide and its 3 mm fillet is well under one, so a plain box of the same size
+ * draws the same picture for a twenty-fifth of the triangles. Lower quality
+ * tiers switch every molded box to that until a district is entered, then back.
+ * The swap replaces buffers in place: meshes and instances keep their geometry. */
+type Buffers = { index: BufferGeometry["index"]; attributes: BufferGeometry["attributes"] };
+const molded = new Map<BufferGeometry, { full: Buffers; low: Buffers | null; makeLow: () => Buffers }>();
+const brickDetail = { full: true };
+const capture = (geometry: BufferGeometry): Buffers => ({ index: geometry.index, attributes: { ...geometry.attributes } });
+
+/** Puts another shared geometry under the same switch, with its own simplified
+ * form (built on first use). */
+export function registerDetail(geometry: BufferGeometry, makeLow: () => BufferGeometry | Buffers) {
+  molded.set(geometry, { full: capture(geometry), low: null, makeLow: () => { const low = makeLow(); return "isBufferGeometry" in low ? capture(low) : low; } });
+  geometry.addEventListener("dispose", () => molded.delete(geometry));
+  if (!brickDetail.full) applyDetail(geometry, false);
+}
+
+function boxBuffers(): Buffers {
+  const box = new BoxGeometry(1, 1, 1);
+  // A zero profile leaves the vertex hook off: exactly the unit box.
+  box.setAttribute("moldedProfile", new Float32BufferAttribute(new Float32Array(box.getAttribute("position").count * 4), 4));
+  return capture(box);
+}
+
+function applyDetail(geometry: BufferGeometry, full: boolean) {
+  const entry = molded.get(geometry);
+  if (!entry) return;
+  const next = full ? entry.full : (entry.low ??= entry.makeLow());
+  if (geometry.attributes.position === next.attributes.position) return;
+  geometry.setIndex(next.index);
+  for (const name of Object.keys(geometry.attributes)) if (!(name in next.attributes)) geometry.deleteAttribute(name);
+  for (const [name, attribute] of Object.entries(next.attributes)) geometry.setAttribute(name, attribute);
+  geometry.clearGroups();
+}
+
+/** Full molded bricks, or plain boxes. */
+export function setBrickDetail(full: boolean) {
+  if (brickDetail.full === full) return;
+  brickDetail.full = full;
+  molded.forEach((_, geometry) => applyDetail(geometry, full));
 }

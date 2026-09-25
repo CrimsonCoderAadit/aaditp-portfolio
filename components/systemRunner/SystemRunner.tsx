@@ -6,6 +6,7 @@ import { createWorld, displayScore, update, type Phase, type World } from "./eng
 import { createBackdrop, draw, fitCanvas } from "./render";
 import { useSceneTransition } from "../scene/SceneTransition";
 import { terminalBridge } from "../scene/terminalBridge";
+import { coverScene } from "../scene/roomInteractions";
 import "./system-runner.css";
 
 const STORE = "aadit-portfolio-system-runner-best";
@@ -64,6 +65,8 @@ export default function SystemRunner() {
   const [expanded, setExpanded] = useState(false);
   const [shown, setShown] = useState(false);
   const [closing, setClosing] = useState(false);
+  // Expanded, the game has the screen: the room behind it holds its last frame.
+  useEffect(() => (expanded && !closing ? coverScene() : undefined), [expanded, closing]);
   const [launching, setLaunching] = useState(false);
   const [swapping, setSwapping] = useState(false);
   const [view, setView] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));

@@ -3,13 +3,13 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { CanvasTexture, Frustum, Matrix4, MeshPhysicalMaterial, SRGBColorSpace } from "three";
 import { isDistrictMode, isTerminalMode, type SceneMode } from "./SceneTransition";
 import { DASHBOARD_CENTRE } from "./terminalGeometry";
+import { TIER_SETTINGS, useTier } from "./quality";
 
 /** The left monitor's ambient operations dashboard: environmental storytelling,
  * not an interface. One continuous layout (system map, build log, load and
  * throughput, service health) whose emphasis drifts slowly between panels.
  * Everything is a pure function of time, painted into a small canvas. */
 
-const FPS = 12;
 /** Beyond this the panel is a few pixels wide; it holds its last frame. */
 const WATCH = 8;
 
@@ -165,7 +165,7 @@ export function paintDashboard(canvas: HTMLCanvasElement, t: number) {
   });
 }
 
-/** The dashboard's screen material and its cadence. It repaints at FPS, and
+/** The dashboard's screen material and its cadence. It repaints at the quality tier's monitor rate, and
  * asks for frames itself, only while the panel is near and in view; far off,
  * in a district, at the terminal or in a hidden tab it holds its last frame.
  * Reduced-motion visitors get one still frame. */
@@ -190,6 +190,7 @@ export function useSystemsDashboard(mode: SceneMode) {
   const view = useMemo(() => ({ frustum: new Frustum(), matrix: new Matrix4() }), []);
   const still = useRef(true);
   const resting = !isDistrictMode(mode) && !isTerminalMode(mode);
+  const fps = TIER_SETTINGS[useTier()].monitorFps;
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     still.current = preference.matches;
@@ -198,11 +199,11 @@ export function useSystemsDashboard(mode: SceneMode) {
       if (still.current || document.hidden || !watched.current) return;
       last.current = (performance.now() - start) / 1000 + 20;
       invalidate();
-    }, 1000 / FPS);
+    }, 1000 / fps);
     const follow = () => { still.current = preference.matches; };
     preference.addEventListener("change", follow);
     return () => { window.clearInterval(timer); preference.removeEventListener("change", follow); };
-  }, [invalidate]);
+  }, [invalidate, fps]);
 
   const painted = useRef(0);
   useFrame(() => {

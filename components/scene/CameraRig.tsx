@@ -329,7 +329,8 @@ export default function CameraRig() {
       camera.lookAt(planLook.current);
       return;
     }
-    const step = Math.min(delta, .05);
+    // Clamped only against long stalls (a hidden tab): moves keep their timing down to 10 fps.
+    const step = Math.min(delta, .1);
     // An open detail panel takes the right of the screen on wide layouts; a lens
     // shift (not a camera move) re-centres the district in the space left of it.
     const perspective = camera as PerspectiveCamera;

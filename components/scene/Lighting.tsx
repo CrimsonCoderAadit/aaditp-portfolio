@@ -5,7 +5,7 @@ import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUnifo
 import { CITY_GROUP_POSITION, TABLETOP_Y } from "./districtLayout";
 import { GLASS_WALL, ROOM, ROOM_CENTRE_X, ROOM_CENTRE_Z } from "./roomLayout";
 import { GLAZING_Z } from "./roomAssets/architecture";
-import { QUALITY } from "./quality";
+import { TIER_SETTINGS, useTier } from "./quality";
 
 // Area lights read their LTC lookup tables from here; without it they add nothing.
 RectAreaLightUniformsLib.init();
@@ -26,21 +26,22 @@ const [CITY_X, , CITY_Z] = CITY_GROUP_POSITION;
  * Fill comes from a low hemisphere and a studio environment used only for
  * reflections on metal, glass and plastic. */
 export default function Lighting() {
+  const settings = TIER_SETTINGS[useTier()];
   const tableTarget = useMemo(() => new Object3D(), []);
   const roomTarget = useMemo(() => new Object3D(), []);
   const glassMid = (ROOM.floor + ROOM.ceiling) / 2, glassHeight = ROOM.ceiling - ROOM.floor;
   return (
     <>
-      <SoftShadows size={22} samples={QUALITY.softShadowSamples} focus={0} />
+      {settings.softShadowSamples > 0 && <SoftShadows size={22} samples={settings.softShadowSamples} focus={0} />}
       <hemisphereLight args={["#d9dfe3", "#2a241e", .2]} />
       {/* The hero camera looks from +X/+Z; this key rakes across its view by ~36°. */}
       <primitive object={roomTarget} position={[ROOM_CENTRE_X, 0, ROOM_CENTRE_Z]} />
       <directionalLight position={[ROOM_CENTRE_X, 10, ROOM_CENTRE_Z + 7]} target={roomTarget} intensity={1.55} color="#fff0e0" castShadow
-        shadow-mapSize={[QUALITY.shadowMap, QUALITY.shadowMap]} shadow-camera-left={-10.2} shadow-camera-right={10.2} shadow-camera-top={8.2} shadow-camera-bottom={-8.2}
+        shadow-mapSize={[settings.shadowMap, settings.shadowMap]} shadow-camera-left={-10.2} shadow-camera-right={10.2} shadow-camera-top={8.2} shadow-camera-bottom={-8.2}
         shadow-camera-near={2} shadow-camera-far={26} shadow-normalBias={.012} shadow-bias={-.00008} />
       <primitive object={tableTarget} position={[CITY_X, TABLETOP_Y, CITY_Z]} />
       <spotLight position={[CITY_X - .6, 8.6, CITY_Z + 2.2]} target={tableTarget} angle={.8} penumbra={1} decay={0} intensity={1.15} color="#fff6ea" />
-      <rectAreaLight position={[GLASS_WALL.centre, glassMid, ROOM.back + .02]} rotation={[0, Math.PI, 0]} width={GLASS_WALL.width * .9} height={glassHeight * .85} intensity={.32} color="#9fb2cf" />
+      <rectAreaLight visible={settings.decorativeLights} position={[GLASS_WALL.centre, glassMid, ROOM.back + .02]} rotation={[0, Math.PI, 0]} width={GLASS_WALL.width * .9} height={glassHeight * .85} intensity={.32} color="#9fb2cf" />
       <Environment resolution={256} frames={1} environmentIntensity={.5}>
         <Lightformer form="rect" intensity={3} color="#fff2df" position={[-3, 6, 2]} rotation={[Math.PI / 2, 0, 0]} scale={[7, 5, 1]} />
         <Lightformer form="rect" intensity={.9} color="#aebfd8" position={[GLASS_WALL.centre, glassMid, GLAZING_Z - .5]} scale={[GLASS_WALL.width, glassHeight, 1]} />

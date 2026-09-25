@@ -7,7 +7,7 @@ import { Piece, useAssembled, useRoomSurfaces } from "./roomAssets/RoomSurfaces"
 import { bevelBox } from "./roomAssets/shapes";
 import { buildArchitecture, doorLeaf } from "./roomAssets/architecture";
 import { CEILING_SKY, STAR_TIME, paintNightSky, skyTextures, type SkyImages } from "./roomAssets/nightSky";
-import { QUALITY } from "./quality";
+import { quality } from "./quality";
 import { COVE_LIP, COVE_STRENGTH, DESK_GLOW, DESK_WASH, VIOLET } from "./roomAssets/ambience";
 import { MURALS, muralPlaceholder, muralUV, useMuralMaps, type MuralWall } from "./roomAssets/murals";
 
@@ -28,7 +28,7 @@ const blackTexture = () => {
  * yield) if no worker can run. Low-tier devices paint the same sky at half
  * size: four times the star density and half the star size keep it looking the same. */
 const paintSky = () => new Promise<SkyImages>((resolve) => {
-  const spec = QUALITY.tier === "low" ? { ...CEILING_SKY, width: CEILING_SKY.width / 2, height: Math.round(CEILING_SKY.height / 2), stars: CEILING_SKY.stars * 4, starScale: (CEILING_SKY.starScale ?? 1) / 2 } : CEILING_SKY;
+  const spec = (quality.get().initial === "low" || quality.get().initial === "emergency") ? { ...CEILING_SKY, width: CEILING_SKY.width / 2, height: Math.round(CEILING_SKY.height / 2), stars: CEILING_SKY.stars * 4, starScale: (CEILING_SKY.starScale ?? 1) / 2 } : CEILING_SKY;
   const onMainThread = () => window.setTimeout(() => resolve(paintNightSky(spec)), 0);
   try {
     const worker = new Worker(new URL("./roomAssets/nightSky.worker.ts", import.meta.url));

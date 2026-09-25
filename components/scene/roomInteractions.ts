@@ -55,12 +55,15 @@ export function useChessGame() {
 /** Full-screen overlays that hide the room entirely (an arcade game) cover it
  * while open, and the room's ambient animation and parallax rest meanwhile. */
 let covers = 0;
+const coverListeners = new Set<() => void>();
 export function coverScene() {
   covers++;
+  coverListeners.forEach((listener) => listener());
   let released = false;
-  return () => { if (!released) { released = true; covers--; } };
+  return () => { if (!released) { released = true; covers--; coverListeners.forEach((listener) => listener()); } };
 }
 export const sceneCovered = () => covers > 0;
+export const onSceneCover = (listener: () => void) => { coverListeners.add(listener); return () => { coverListeners.delete(listener); }; };
 
 /** Set while an object is being dragged across the floor, so the camera
  * leaves that pointer alone. */

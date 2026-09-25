@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useDecorativeLights } from "./quality";
 import { useFrame, useThree } from "@react-three/fiber";
 import { CanvasTexture, Group, InstancedMesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PlaneGeometry, SRGBColorSpace } from "three";
 import { paintBuildPassed, paintManuscript } from "./roomAssets/framedArt";
@@ -298,6 +299,7 @@ export default function RoomDecor() {
   const deskLampParts = useAssembled(() => deskLamp.geometry);
   const bedsideLampParts = useAssembled(() => bedsideLamp.geometry);
   const [bedsideShade, bedsideLightRef] = useSwitchedLamp("bedsideLamp", 1.7);
+  const lamps = useDecorativeLights();
   const curtains = useAssembled(buildCurtains);
   const rug = useAssembled(buildRug);
   const plant = useAssembled(buildPlant);
@@ -344,8 +346,8 @@ export default function RoomDecor() {
       <Piece name="plant" parts={plant} at={[PLANT_AT.at[0], ROOM.floor, PLANT_AT.at[2]]} turn={PLANT_AT.turn} scale={METRE} />
 
       {/* Two short-range warm practicals at their bulbs. Neither reaches the model table's key. */}
-      <pointLight position={toWorld(DESK_AT, deskLamp.bulb)} intensity={1.9} distance={2.4} decay={2} color="#ffca8a" />
-      <pointLight ref={bedsideLightRef} position={toWorld(BEDSIDE_AT, bedsideLamp.bulb)} intensity={1.7} distance={2.5} decay={2} color="#ffbe78" />
+      <pointLight visible={lamps} position={toWorld(DESK_AT, deskLamp.bulb)} intensity={1.9} distance={2.4} decay={2} color="#ffca8a" />
+      <pointLight visible={lamps} ref={bedsideLightRef} position={toWorld(BEDSIDE_AT, bedsideLamp.bulb)} intensity={1.7} distance={2.5} decay={2} color="#ffbe78" />
     </group>
     <RoomPulseTarget name="football" pulse="football" at={FOOTBALL} radius={.3} from={["personal", "display"]} />
     <RoomSwitch name="bedside lamp switch" toggle="bedsideLamp" at={toWorld(BEDSIDE_AT, bedsideLamp.bulb)} radius={.32} from={["personal"]} />
