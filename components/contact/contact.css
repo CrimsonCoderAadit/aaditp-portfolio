@@ -1,0 +1,41 @@
+/* Contact, on the shared content shell: a cool communication console. The
+ * route line is decoration only; every control is a real link. */
+
+.content-detail[data-tone="contact"] { border-top-color: rgba(127, 214, 230, .55); }
+.contact-console { max-width: 780px; margin: 0 auto; padding: clamp(26px, 3.4vw, 56px) clamp(22px, 3vw, 48px) 48px; animation: content-rise .38s ease-out both; }
+.contact-console h2 { margin: 0; font: 600 clamp(32px, 3.4vw, 52px) / 1.05 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.contact-invite { margin: 14px 0 0; font-size: clamp(16px, 1.25vw, 19px); line-height: 1.55; color: var(--soft); }
+
+.contact-route { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 28px 0 0; font: 500 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.contact-route span { padding: 6px 10px; border: 1px solid var(--line); border-radius: 2px; }
+.contact-route i { width: 22px; height: 1px; background: rgba(127, 214, 230, .5); }
+
+.contact-label { margin: 0; font: 600 12px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.contact-mail { margin-top: 30px; padding: 22px 22px 24px; border: 1px solid rgba(127, 214, 230, .3); border-radius: 3px; background: linear-gradient(180deg, rgba(127, 214, 230, .06), rgba(127, 214, 230, .01)); }
+.contact-address { margin: 10px 0 0; font: 500 clamp(20px, 2vw, 28px) var(--mono); color: var(--ink); overflow-wrap: anywhere; user-select: all; }
+.contact-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.contact-actions a, .contact-actions button {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border: 1px solid rgba(214, 228, 232, .22); border-radius: 2px;
+  background: none; color: var(--ink); text-decoration: none; cursor: pointer; font: 500 16px "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .03em;
+  transition: border-color .18s, background .18s;
+}
+.contact-actions .contact-primary { border-color: rgba(127, 214, 230, .6); background: rgba(127, 214, 230, .08); }
+.contact-actions a:hover, .contact-actions button:hover { border-color: var(--cyan); background: rgba(127, 214, 230, .12); }
+
+.contact-profiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
+.contact-profiles a {
+  position: relative; display: grid; gap: 6px; padding: 14px 40px 14px 16px; border: 1px solid var(--line); border-radius: 2px; color: var(--ink); text-decoration: none;
+  transition: border-color .18s, background .18s;
+}
+.contact-profiles a:hover { border-color: rgba(127, 214, 230, .45); background: rgba(127, 214, 230, .04); }
+.contact-value { font-size: 16.5px; color: #dde3e5; overflow-wrap: anywhere; }
+.contact-arrow { position: absolute; top: 14px; right: 14px; color: var(--muted); transition: transform .18s, color .18s; }
+.contact-profiles a:hover .contact-arrow { transform: translate(2px, -2px); color: var(--cyan); }
+
+@media (max-width: 899px), (max-aspect-ratio: 6/5) {
+  .contact-console { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-console { animation-duration: 1ms; }
+  .contact-arrow { transition: none; }
+}

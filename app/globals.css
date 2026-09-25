@@ -1,0 +1,140 @@
+:root { color-scheme: dark; background: #05060a; color: #e6e4df; }
+/* Only a failed start is ever announced; loading itself shows nothing. */
+.studio-error { position: absolute; inset: 0; z-index: 5; display: grid; place-content: center; gap: 18px; justify-items: center; background: #05060a; color: #c9c6bd; font-size: 15px; }
+.studio-error p { margin: 0; }
+.studio-error button { padding: 10px 18px; color: inherit; border: 1px solid #c8c1af60; background: transparent; cursor: pointer; font: inherit; font-size: 13px; }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+.workbench-hero { position: relative; width: 100%; height: 100svh; height: 100dvh; overflow: hidden; }
+.scene {
+  position: absolute; inset: 0; z-index: 0; overflow: hidden;
+  background:
+    radial-gradient(ellipse at 48% 47%, #111a32 0%, #080d1a 36%, transparent 72%),
+    radial-gradient(1px 1px at 7% 19%, #b9c8e6b3 99%, transparent),
+    radial-gradient(1px 1px at 15% 73%, #8fa8d9a6 99%, transparent),
+    radial-gradient(1.5px 1.5px at 24% 38%, #d5dcf0b3 99%, transparent),
+    radial-gradient(1px 1px at 32% 85%, #9db3dfa6 99%, transparent),
+    radial-gradient(1px 1px at 41% 16%, #d5dcf0a6 99%, transparent),
+    radial-gradient(1px 1px at 52% 68%, #a5b8dfa6 99%, transparent),
+    radial-gradient(1.5px 1.5px at 63% 29%, #d5dcf0b3 99%, transparent),
+    radial-gradient(1px 1px at 71% 78%, #9db3dfa6 99%, transparent),
+    radial-gradient(1px 1px at 82% 46%, #b9c8e6b3 99%, transparent),
+    radial-gradient(1px 1px at 92% 13%, #8fa8d9a6 99%, transparent),
+    #05060a;
+}
+/* The hero poster over the live canvas (see HeroPoster). Each image is centred
+ * and sized so the scene's live frame is exactly its middle: height is the
+ * container's scaled by the ratio of the poster's lens to the camera's. */
+.hero-poster { position: absolute; inset: 0; overflow: hidden; container-type: size; background: #05060a; transition: opacity 200ms ease-out; }
+.hero-poster[data-ready] { opacity: 0; pointer-events: none; }
+.hero-poster img { position: absolute; left: 50%; top: 50%; width: auto; max-width: none; height: 100cqh; transform: translate(-50%, -50%); }
+/* Landscape: rendered at a 68° vertical lens and 1.813:1. The camera holds 54°
+ * vertically from 16:10 up, and below that holds 16:10's width, up to 68°. */
+/* Near-square screens and upright tablets: drawn for 21:20 and 3:4. The camera
+ * tips down a little more as the screen narrows (see viewpointPose), which
+ * moves the scene up by k × (width − drawn aspect × height), k from the pose. */
+@media (min-aspect-ratio: 9/10) and (max-aspect-ratio: 6/5) { .hero-poster img { transform: translate(-50%, calc(-50% + 14.14cqw - 14.84cqh)); } }
+@media (min-aspect-ratio: 33/50) and (max-aspect-ratio: 9/10) { .hero-poster img { transform: translate(-50%, calc(-50% + 13.31cqw - 9.98cqh)); } }
+@media (min-aspect-ratio: 6/5) { .hero-poster img { height: min(132.38cqh, max(100cqh, 82.74cqw)); transform: translate(-50%, -50%); } }
+@media (prefers-reduced-motion: reduce) { .hero-poster { transition-duration: 1ms; } }
+.scene canvas { position: relative; z-index: 1; display: block; touch-action: none; background: transparent; }
+.identity { position: absolute; left: max(6vw, env(safe-area-inset-left)); bottom: max(7vh, calc(env(safe-area-inset-bottom) + 24px)); pointer-events: none; }
+.identity h1 { margin: 0; }
+/* One line at every width. The name is set in a variable font whose weight axis
+ * also widens the glyphs; hovering moves it along that axis. The hidden copy at
+ * the widest weight reserves the room, so nothing beside it moves. */
+.hero-name { display: inline-grid; font-family: var(--font-display), "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: clamp(19px, 2.5vw, 46px); line-height: 1.2; letter-spacing: .03em; white-space: nowrap; pointer-events: auto; cursor: default; }
+.hero-name > span { grid-area: 1 / 1; }
+.hero-name-live { font-weight: 640; transition: font-weight 420ms cubic-bezier(.22, .8, .2, 1); }
+.hero-name-sizer { font-weight: 800; visibility: hidden; }
+.hero-name:hover .hero-name-live { font-weight: 800; }
+@media (max-width: 1000px) { .hero-name { font-size: clamp(19px, 3.6vw, 34px); } }
+@media (prefers-reduced-motion: reduce) { .hero-name-live { transition-duration: 1ms; } }
+.identity p { margin: 10px 0 0; color: #e2dfd8; font-size: clamp(14px, 1.05vw, 17px); font-weight: 400; letter-spacing: .045em; line-height: 1.6; }
+.identity p span { margin: 0 .22em; color: #777d80; }
+.identity { opacity: 1; transition: opacity 450ms ease; }
+.workbench-hero:not([data-mode="workbench"]) .identity { opacity: 0; }
+.workbench-back, .projects-keyboard-entry { position: absolute; top: max(32px, env(safe-area-inset-top)); left: max(6vw, env(safe-area-inset-left)); border: 1px solid #ffffff20; border-radius: 3px; background: #191b1de6; color: #e6e4df; padding: 12px 16px; font: inherit; font-size: 15px; letter-spacing: .035em; cursor: pointer; }
+.workbench-back:hover { background: #303438; }
+.workbench-back:focus-visible, .projects-keyboard-entry:focus-visible { outline: 2px solid #c5c0b3; outline-offset: 4px; }
+.projects-keyboard-entry:not(:focus-visible), .scene-status { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (prefers-reduced-motion: reduce) { .identity { transition-duration: 100ms; } }
+.scene-fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; color: #a8aaac; font-size: 14px; }
+@media (max-width: 600px) { .identity { left: 8vw; bottom: max(7vh, calc(env(safe-area-inset-bottom) + 24px)); } .hero-name { font-size: min(4.4vw, 24px); letter-spacing: .02em; } }
+@media (max-height: 500px) { .identity { bottom: 22px; } .hero-name { font-size: 20px; } .identity p { margin-top: 3px; font-size: 13px; } }
+.viewpoint-nav { position: absolute; right: max(28px, env(safe-area-inset-right)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 14px; }
+.viewpoint-dot { position: relative; width: 22px; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; }
+.viewpoint-dot::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #e6e4df; opacity: .7; box-shadow: 0 0 0 1.5px #000000a6, 0 0 8px #000000a6; transition: opacity 300ms ease, transform 300ms ease; }
+.viewpoint-dot:hover::before, .viewpoint-dot:focus-visible::before { opacity: .8; }
+.viewpoint-dot[aria-current="true"]::before { opacity: 1; transform: scale(1.3); }
+.viewpoint-dot:disabled { cursor: default; }
+.viewpoint-dot:focus-visible { outline: none; }
+.viewpoint-dot:focus-visible::after { content: ""; position: absolute; inset: 1px; border-radius: 50%; border: 1px solid #c5c0b3; }
+.viewpoint-label { position: absolute; right: 30px; top: 50%; transform: translate(4px, -50%); padding: 5px 9px; border-radius: 3px; background: #191b1de6; color: #e6e4df; font-size: 13px; letter-spacing: .06em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 200ms ease, transform 200ms ease; }
+.viewpoint-dot:hover .viewpoint-label, .viewpoint-dot:focus-visible .viewpoint-label { opacity: 1; transform: translate(0, -50%); }
+@media (max-width: 600px) {
+  .viewpoint-nav { top: auto; right: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(50%); flex-direction: row; gap: 10px; }
+  .viewpoint-label { right: 50%; top: auto; bottom: 28px; transform: translate(50%, 4px); }
+  .viewpoint-dot:hover .viewpoint-label, .viewpoint-dot:focus-visible .viewpoint-label { transform: translate(50%, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .viewpoint-dot::before, .viewpoint-label { transition-duration: 1ms; } }
+/* Label over a hovered project bay in the Projects campus. */
+.project-bay-label { display: flex; flex-direction: column; gap: 3px; padding: 7px 11px; white-space: nowrap; transform: translateY(-4px); background: #111417eb; border: 1px solid #d6e4e81f; border-radius: 2px; color: #e8eced; font: 600 13px / 1.3 "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .08em; animation: bay-label .2s ease-out both; }
+.project-bay-label span { font: 500 12px / 1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .05em; color: #94a4a9; }
+@keyframes bay-label { from { opacity: 0; transform: translateY(2px); } }
+@media (prefers-reduced-motion: reduce) { .project-bay-label { animation-duration: 1ms; } }
+/* A section's interface while its code arrives: quiet, in the panel's place. */
+.section-loading { position: absolute; z-index: 20; right: max(20px, env(safe-area-inset-right)); bottom: max(26px, env(safe-area-inset-bottom)); padding: 10px 14px; border: 1px solid #d6e4e81f; border-radius: 3px; background: #111417eb; color: #bdc8cb; font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .18em; text-transform: uppercase; animation: section-loading 1.2s ease-in-out infinite alternate; }
+@keyframes section-loading { from { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .section-loading { animation: none; } }
+/* The hero's invitation to start it. */
+.tour-start {
+  pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 11px 16px; border: 1px solid #ffffff26; border-radius: 3px;
+  background: #191b1dcc; color: #e6e4df; font: inherit; font-size: 15px; letter-spacing: .05em; cursor: pointer; transition: background .18s, border-color .18s;
+}
+.tour-start:hover { background: #303438; }
+.tour-start:focus-visible { outline: 2px solid #c5c0b3; outline-offset: 4px; }
+.tour-start[data-fresh] { border-color: #7fd6e680; }
+.tour-start[data-fresh]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #7fd6e6; animation: tour-dot 2.4s ease-in-out infinite; }
+@keyframes tour-dot { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .tour-start[data-fresh]::before { animation: none; } }
+.identity[data-hidden] { opacity: 0; }
+.identity { transition: opacity 700ms ease, transform 700ms cubic-bezier(.22, .8, .2, 1); }
+/* A tiny name tag for the city's hidden details. */
+.city-tag { display: inline-block; padding: 2px 6px; border: 1px solid #ffffff2a; border-radius: 2px; background: #121418e0; color: #dfe6ee; font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .22em; white-space: nowrap; }
+/* The hero's two companion actions, and the résumé when the hero is out of view. */
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+.hero-actions .tour-start { margin-top: 0; }
+.resume-link {
+  pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border: 1px solid #ffffff1c; border-radius: 3px;
+  background: #191b1d99; color: #e0ddd6; font-size: 15px; letter-spacing: .05em; text-decoration: none; transition: background .18s, border-color .18s, color .18s;
+}
+.resume-link:hover { background: #303438; color: #e6e4df; }
+.resume-link:focus-visible, .resume-utility:focus-visible { outline: 2px solid #c5c0b3; outline-offset: 4px; }
+.resume-utility {
+  position: absolute; z-index: 40; right: max(76px, calc(env(safe-area-inset-right) + 62px)); bottom: max(26px, env(safe-area-inset-bottom));
+  display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 13px; border: 1px solid #d5e4e44a; border-radius: 19px;
+  background: #131c22cf; color: #d3e7e8; font-size: 14px; letter-spacing: .06em; text-decoration: none; box-shadow: 0 4px 18px #0005;
+  transition: background .2s, border-color .2s; animation: resume-in 400ms ease both;
+}
+.resume-utility:hover { background: #1c3037; border-color: #9bcbd0; color: #fff; }
+.resume-utility svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+@keyframes resume-in { from { opacity: 0; } }
+@media (max-width: 600px) {
+  .resume-utility { right: max(64px, calc(env(safe-area-inset-right) + 58px)); bottom: max(16px, env(safe-area-inset-bottom)); width: 40px; height: 40px; padding: 0; justify-content: center; }
+  .resume-utility span { display: none; }
+}
+/* A first visit's invitation under the city; it fades itself away. */
+.city-hint {
+  position: absolute; left: 50%; bottom: max(7vh, calc(env(safe-area-inset-bottom) + 24px)); z-index: 10; display: flex; align-items: center; gap: 9px; margin: 0;
+  padding: 8px 14px; border: 1px solid #ffffff17; border-radius: 3px; background: #121418b8; color: #dfe3e2;
+  font: 600 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
+  transform: translate(-50%, 6px); opacity: 0; pointer-events: none; transition: opacity 500ms ease, transform 500ms ease;
+}
+.city-hint[data-visible] { opacity: 1; transform: translate(-50%, 0); transition-delay: 900ms; }
+.city-hint svg { width: 13px; height: 13px; fill: #dfe3e2; }
+.city-hint-coarse { display: none; }
+@media (pointer: coarse) { .city-hint-fine { display: none; } .city-hint-coarse { display: inline; } }
+@media (max-width: 900px) { .city-hint { bottom: calc(max(7vh, calc(env(safe-area-inset-bottom) + 24px)) + 150px); letter-spacing: .14em; } }
+@media (prefers-reduced-motion: reduce) { .city-hint, .resume-utility { transition-duration: 1ms; animation: none; } }

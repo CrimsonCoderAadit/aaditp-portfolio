@@ -1,0 +1,66 @@
+/* Research detail layout, on the shared content shell (content-ui/content.css):
+ * the publication's identity on the left, the paper's account on the right.
+ * Calm and exact: hairlines, a faint technical grid behind the methodology,
+ * cyan kept to the flow of the pipeline. */
+
+.research-detail-grid {
+  display: grid; grid-template-columns: minmax(0, 34fr) minmax(0, 66fr); gap: clamp(24px, 3.4vw, 56px); padding: clamp(22px, 2.6vw, 40px);
+  animation: content-rise .38s ease-out both;
+}
+.research-identity { position: sticky; top: 0; align-self: start; }
+.research-identity h2 { margin: 0; font: 600 clamp(21px, 1.7vw, 27px) / 1.25 "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .005em; }
+.research-identity dl { display: grid; gap: 14px; margin: 22px 0 0; padding: 16px 0 0; border-top: 1px solid var(--line); }
+.research-identity dt { font: 600 12px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.research-identity dd { margin: 4px 0 0; font-size: 16px; line-height: 1.55; color: #dde3e5; }
+.research-authors { margin: 0; padding: 0; list-style: none; }
+.research-authors li { display: inline; }
+.research-authors li:not(:last-child)::after { content: ", "; }
+.research-identity .content-links { margin-top: 20px; }
+.research-detail-grid .content-summary { margin-top: 4px; }
+
+.research-data { margin: 4px 0 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 2px; font-size: 16px; line-height: 1.65; color: #ced7da; background: rgba(214, 228, 232, .02); max-width: 72ch; }
+.research-data span { display: block; margin-bottom: 4px; font: 600 12px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+
+/* Methodology: each pipeline as a vertical flow on a faint grid. */
+.research-pipelines { display: grid; gap: 14px; }
+.research-pipeline {
+  margin: 0; padding: 14px 16px 16px; border: 1px solid var(--line); border-radius: 2px;
+  background-color: rgba(214, 228, 232, .015);
+  background-image: linear-gradient(rgba(127, 214, 230, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(127, 214, 230, .05) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.research-pipeline figcaption { margin-bottom: 12px; font: 600 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent, var(--cyan)); }
+.research-pipeline ol, .research-pipeline ul { margin: 0; padding: 0; list-style: none; }
+.research-pipeline ol { display: grid; justify-items: start; }
+.research-pipeline ol > li:not(.research-arrow) {
+  max-width: 100%; padding: 7px 11px; border: 1px solid rgba(214, 228, 232, .16); border-radius: 2px;
+  background: #151a1d; font: 500 14px / 1.45 var(--mono); color: #dde3e5;
+}
+.research-pipeline ol > li.research-output { border-color: var(--accent, var(--cyan)); color: var(--ink); }
+.research-pipeline ol > li.research-branch { padding: 0; border: 0; background: none; }
+.research-branch ul { display: flex; flex-wrap: wrap; gap: 6px; }
+.research-branch ul li { padding: 7px 11px; border: 1px dashed rgba(214, 228, 232, .22); border-radius: 2px; background: #151a1d; font: 500 14px / 1.45 var(--mono); color: #dde3e5; }
+.research-arrow { width: 1px; height: 18px; margin-left: 18px; background: rgba(127, 214, 230, .45); position: relative; }
+.research-arrow::after { content: ""; position: absolute; left: -3px; bottom: -1px; border: 3.5px solid transparent; border-top: 4px solid rgba(127, 214, 230, .6); border-bottom: 0; }
+
+/* Results: figures exactly as reported, each with where it was measured. */
+.research-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin: 0; }
+.research-results > div { padding: 10px 12px; border: 1px solid var(--line); border-radius: 2px; }
+.research-results dt { font: 600 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.research-results dd { margin: 6px 0 0; font: 600 20px "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); }
+.research-results dd.research-result-note { margin-top: 4px; font: 500 13px / 1.4 var(--mono); color: var(--muted); }
+.research-results-note { margin: 10px 0 0; font-size: 14.5px; line-height: 1.6; color: var(--muted); max-width: 72ch; }
+
+@media (max-width: 899px), (max-aspect-ratio: 6/5) {
+  .research-detail-grid { grid-template-columns: 1fr; gap: 20px; padding: 20px 20px calc(80px + env(safe-area-inset-bottom)); }
+  /* Stacked: identity, then the paper's account, then its links. */
+  .research-identity { display: contents; }
+  .research-identity > * { order: 1; }
+  .research-detail-grid > .content-copy { order: 2; }
+  .research-identity .content-links { order: 3; margin-top: 0; }
+  .research-identity dl { margin-top: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .research-detail-grid { animation-duration: 1ms; }
+}

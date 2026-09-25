@@ -1,0 +1,52 @@
+.arcade { --graphite: #0e1013; --ink: #eceef0; --muted: #9aa1aa; --green: #6fdc95; --violet: #8b6bff;
+  position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: flex-end; gap: 18px;
+  padding: max(20px, env(safe-area-inset-top)) max(5vw, env(safe-area-inset-right)) max(26px, env(safe-area-inset-bottom)) max(5vw, env(safe-area-inset-left));
+  background: linear-gradient(180deg, #0e101300 0%, #0e101300 30%, #0e1013d9 58%, #0b0c0ef7 100%); color: var(--ink);
+  animation: arcade-in 420ms cubic-bezier(.22,.8,.2,1) both; }
+.arcade::after { content: ""; position: fixed; inset: 0; background: #050607; opacity: 0; pointer-events: none; transition: opacity 380ms ease; }
+.arcade[data-launching]::after { opacity: .86; }
+.arcade-head { position: absolute; top: max(20px, env(safe-area-inset-top)); left: max(5vw, env(safe-area-inset-left)); right: max(5vw, env(safe-area-inset-right)); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.arcade-brand { display: flex; align-items: center; gap: 12px; }
+.arcade-brand h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .34em; }
+.arcade-state { color: var(--muted); font: 600 10px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .2em; text-transform: uppercase; }
+.arcade-status { width: 12px; height: 12px; padding: 0; border: 0; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px #6fdc95aa; cursor: default; }
+.arcade-status:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+.arcade-library { display: flex; align-items: flex-end; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 6px 2px 8px; scrollbar-width: none; }
+.arcade-library::-webkit-scrollbar { display: none; }
+.arcade-tile { position: relative; flex: 0 0 auto; width: clamp(130px, 13vw, 190px); aspect-ratio: 3 / 4; padding: 0; overflow: hidden; border: 1px solid #ffffff1c; border-radius: 6px; background: #15171b; color: inherit; font: inherit; text-align: left; cursor: pointer; scroll-snap-align: start;
+  transition: width 320ms cubic-bezier(.22,.8,.2,1), transform 320ms cubic-bezier(.22,.8,.2,1), border-color 200ms, opacity 300ms, box-shadow 320ms; }
+.arcade-tile[aria-selected="true"] { width: clamp(170px, 17vw, 250px); border-color: var(--green); box-shadow: 0 16px 40px #0009, 0 0 0 1px #6fdc9555; }
+.arcade-tile:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.arcade-cover { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.arcade-tile::after { content: ""; position: absolute; inset: 45% 0 0; background: linear-gradient(180deg, #0000, #000c); }
+.arcade-tile-title { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 1; font-size: 12px; font-weight: 700; letter-spacing: .16em; }
+.arcade-tile-badge { position: absolute; top: 10px; left: 10px; z-index: 1; padding: 3px 6px; border-radius: 2px; background: #0d1a12e6; color: var(--green); font: 600 9px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+.arcade-tile[data-exclusive] { opacity: .78; }
+.arcade-tile[data-launching] { z-index: 2; transform: scale(1.12) translateY(-10px); opacity: 1; }
+.arcade[data-launching] .arcade-tile:not([data-launching]) { opacity: .15; }
+.arcade-detail { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; max-width: 880px; }
+.arcade-detail h3 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 700; letter-spacing: .12em; }
+.arcade-detail p { margin: 6px 0 0; max-width: 520px; color: #c3c8ce; font-size: 14px; line-height: 1.45; }
+.arcade-detail .arcade-controls { color: var(--muted); font: 600 11px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
+.arcade-play { flex: 0 0 auto; min-width: 140px; min-height: 46px; padding: 10px 24px; border: 1px solid var(--green); border-radius: 3px; background: #1d5a36; color: #effff4; font: inherit; font-size: 14px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; }
+.arcade-play:hover { background: #247043; }
+.arcade-play:disabled { opacity: .7; cursor: default; }
+.arcade-play:focus-visible, .arcade-exclusive { flex: 0 0 auto; padding: 10px 14px; border: 1px dashed #6fdc9577; border-radius: 3px; color: var(--green); font: 600 11px ui-monospace, monospace; letter-spacing: .14em; text-transform: uppercase; }
+.arcade-loading { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: #07080b; color: #9aa1aa; font: 600 11px ui-monospace, monospace; letter-spacing: .2em; text-transform: uppercase; }
+/* Developer mode: a pixel-grid skin; nothing about play changes. */
+.arcade[data-developer] { --green: #7dff9c; background: linear-gradient(180deg, #0a0f0b00 25%, #07120bee 60%, #050a07fa), repeating-linear-gradient(0deg, #7dff9c10 0 1px, #0000 1px 8px), repeating-linear-gradient(90deg, #7dff9c10 0 1px, #0000 1px 8px); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.arcade[data-developer] .arcade-tile { border-radius: 0; image-rendering: pixelated; }
+.arcade[data-developer] .arcade-cover { filter: contrast(1.2) saturate(.3) sepia(.4) hue-rotate(70deg); }
+@keyframes arcade-in { from { opacity: 0; transform: translateY(12px); } }
+@media (prefers-reduced-motion: reduce) { .arcade, .arcade-tile, .arcade::after { animation-duration: 1ms; transition-duration: 1ms; } }
+@media (max-width: 700px) {
+  .arcade { gap: 12px; background: linear-gradient(180deg, #0e101300 0%, #0e101300 22%, #0e1013e6 45%, #0b0c0ef9 100%); }
+  .arcade-state { display: none; }
+    .arcade-tile { width: 42vw; }
+  .arcade-tile[aria-selected="true"] { width: 48vw; }
+  .arcade-detail { flex-direction: column; align-items: stretch; gap: 12px; }
+  .arcade-detail p { font-size: 13px; }
+  .arcade-play, .arcade-exclusive { text-align: center; }
+}
+.arcade-song { position: absolute; left: max(5vw, env(safe-area-inset-left)); bottom: max(8px, env(safe-area-inset-bottom)); margin: 0; color: #8d949c; font: 600 9px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .22em; text-transform: uppercase; }
+.arcade-song:empty { display: none; }

@@ -1,0 +1,51 @@
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const browser=await chromium.launch({channel:'chrome',headless:true,args:['--disable-background-timer-throttling','--disable-renderer-backgrounding','--disable-backgrounding-occluded-windows']});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const failures=[];
+const assert=(condition,label)=>{console.log(label,condition?'PASS':'FAIL');if(!condition)failures.push(label)};
+const debug=p=>p.evaluate(()=>window.__runnerDebug);
+try{
+ const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
+ const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+ await page.goto('http://localhost:3002');await page.waitForFunction(()=>performance.getEntriesByName('studio:ready').length,null,{timeout:60000});
+ await page.getByRole('button',{name:'Workstation view'}).click();await sleep(1700);await page.mouse.click(855,398);await sleep(1800);
+ await page.getByRole('button',{name:/START RUN/}).click();await sleep(500);
+ await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));});await sleep(150);
+ assert(await page.locator('.runner-layer').getAttribute('data-phase')==='paused','visibility event pauses');
+ await page.evaluate(()=>{delete document.hidden;});await page.getByRole('button',{name:/RESUME/}).click();await sleep(300);
+ await page.evaluate(()=>{const w=window.__runnerDebug;w.integrity=1;w.invulnerable=0;w.packets.push({x:w.player.x,y:w.player.y,vx:0,vy:0,r:12,kind:'straight',spin:0,alive:true});});
+ await sleep(350);assert(await page.locator('.runner-layer').getAttribute('data-phase')==='over','collision reaches game over');
+ assert((await debug(page)).integrity===0,'integrity reaches zero');
+ assert(await page.getByText('CONNECTION LOST').count()===1,'game over panel appears');
+ await page.getByRole('button',{name:/RUN AGAIN/}).click();await sleep(300);const restarted=await debug(page);
+ assert(await page.locator('.runner-layer').getAttribute('data-phase')==='playing'&&restarted.integrity===3&&restarted.stats.hits===0&&restarted.time<1,'restart resets run');
+ await page.getByRole('button',{name:'Exit terminal'}).first().click();await sleep(1800);
+ for(const [button,mode] of [['Open Projects','projects'],['Open Experience','experience'],['Open Research','research'],['Open Skills','skills']]){
+  await page.getByRole('button',{name:button}).focus();await page.keyboard.press('Enter');await sleep(2800);
+  assert(await page.locator('.workbench-hero').getAttribute('data-mode')===mode,`${mode} interaction restored`);
+  await page.getByRole('button',{name:'← Workbench'}).click();await sleep(2800);
+ }
+ assert(errors.length===0,'desktop console clean');if(errors.length)console.log(errors);
+ await context.close();
+ const mobile=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+ const mp=await mobile.newPage();const mobileErrors=[];mp.on('pageerror',e=>mobileErrors.push(e.message));
+ await mp.goto('http://localhost:3002');await mp.waitForFunction(()=>performance.getEntriesByName('studio:ready').length,null,{timeout:60000});
+ await mp.getByRole('button',{name:'Workstation view'}).click();await sleep(1800);await mp.touchscreen.tap(275,340);await sleep(1900);
+ assert(await mp.locator('.runner-layer').getAttribute('data-mode')==='terminal','mobile terminal opens');
+ await mp.screenshot({path:'/private/tmp/system-runner-mobile-menu.png'});
+ await mp.getByRole('button',{name:/START RUN/}).click();await sleep(250);
+ assert(await mp.getByRole('button',{name:'↑'}).count()===1,'touch movement controls visible');
+ const y0=(await debug(mp)).player.y;
+ const up=mp.getByRole('button',{name:'↑'});const box=await up.boundingBox();
+ const cdp=await mobile.newCDPSession(mp);const x=box.x+box.width/2,y=box.y+box.height/2;
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});await sleep(600);
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ const y1=(await debug(mp)).player.y;assert(y1<y0-30,`touch movement controls packet (${Math.round(y0)} → ${Math.round(y1)})`);
+ const pulses0=(await debug(mp)).stats.pulses;await mp.getByRole('button',{name:'PULSE'}).tap();await sleep(150);assert((await debug(mp)).stats.pulses===pulses0+1,'touch pulse works');
+ await mp.screenshot({path:'/private/tmp/system-runner-mobile-playing.png'});
+ await mp.getByRole('button',{name:'Exit terminal'}).first().click();await sleep(2500);assert(await mp.locator('.workbench-hero').getAttribute('data-mode')==='workbench','mobile returns to room');
+ assert(mobileErrors.length===0,'mobile console clean');if(mobileErrors.length)console.log(mobileErrors);
+ await mobile.close();
+ console.log('FAILURES',JSON.stringify(failures));
+}finally{await browser.close()}
+if(failures.length)process.exitCode=1;

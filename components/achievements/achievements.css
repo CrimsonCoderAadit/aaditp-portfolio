@@ -1,0 +1,31 @@
+/* Achievements detail, on the shared content shell: restrained brass for the
+ * civic plaza. The result carries the page; the account follows. */
+
+.content-detail[data-tone="achievements"] { border-top-color: rgba(212, 177, 106, .55); --accent: #d4b16a; }
+/* A result is as tall as what the sources say about it. */
+@media (min-width: 900px) and (min-aspect-ratio: 6/5) { .content-detail[data-tone="achievements"] { bottom: auto; max-height: calc(100% - 124px); } }
+.achievement-plinth { display: block; width: 72px; height: 60px; margin: 0 0 14px -2px; fill: rgba(212, 177, 106, .08); stroke: #d4b16a; stroke-width: 1.3; stroke-linejoin: round; }
+.achievement-plinth text { fill: #d4b16a; stroke: none; font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
+.achievement-detail-grid {
+  display: grid; grid-template-columns: minmax(0, 36fr) minmax(0, 64fr); gap: clamp(24px, 3.4vw, 56px); padding: clamp(22px, 2.6vw, 40px);
+  animation: content-rise .38s ease-out both;
+}
+.achievement-identity { position: sticky; top: 0; align-self: start; padding-left: 18px; border-left: 2px solid #d4b16a; }
+.achievement-result { margin: 0; font: 600 13px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: #d4b16a; }
+.achievement-identity h2 { margin: 12px 0 0; font: 600 clamp(28px, 2.6vw, 40px) / 1.1 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.achievement-year { margin: 12px 0 0; font: 500 14.5px var(--mono); letter-spacing: .1em; color: var(--muted); }
+.achievement-detail-grid .content-summary { margin-top: 4px; }
+.achievement-project { display: grid; gap: 6px; width: 100%; margin: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 2px; background: rgba(212, 177, 106, .03); color: inherit; text-align: left; font: inherit; cursor: pointer; transition: border-color .18s, background .18s; }
+.achievement-project:hover { border-color: rgba(212, 177, 106, .6); background: rgba(212, 177, 106, .07); }
+.achievement-project strong span { color: #d4b16a; }
+.achievement-project strong { font: 600 17.5px "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); }
+.achievement-project span { font-size: 16px; line-height: 1.6; color: #ced7da; }
+.achievement-certifications { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.achievement-certifications li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 16px; color: #dde3e5; }
+.achievement-certifications small { font: 500 13px var(--mono); letter-spacing: .06em; color: var(--muted); }
+
+@media (max-width: 899px), (max-aspect-ratio: 6/5) {
+  .achievement-detail-grid { grid-template-columns: 1fr; gap: 20px; padding: 20px 20px calc(80px + env(safe-area-inset-bottom)); }
+  .achievement-identity { position: static; }
+}
+@media (prefers-reduced-motion: reduce) { .achievement-detail-grid { animation-duration: 1ms; } }

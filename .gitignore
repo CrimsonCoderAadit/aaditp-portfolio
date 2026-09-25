@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.DS_Store
+.env*
+!.env.example
+
+# Original downloads of licensed media, kept outside the site
+/media-sources/
+
+# Build output and logs
+dist/
+build/
+coverage/
+*.log
+
+# Local tool state and browser-test artefacts, not part of the site
+/.playwright-mcp/
+/.remember/

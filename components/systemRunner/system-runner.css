@@ -1,0 +1,122 @@
+/* SYSTEM RUNNER: one console, from the monitor's glass to the viewport.
+ * The console is authored at the monitor's proportions; the page positions it
+ * with a CSS transform (a perspective fit onto the glass, then a uniform fit to
+ * the viewport). Every size inside is in container units, so the menu, the game,
+ * the pause screen and the results screen read the same at either size. */
+
+.runner-layer {
+  position: fixed; inset: 0; z-index: 30; pointer-events: none; color: #dce9ea;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --cyan: #7fd6e6; --violet: #9a88e6; --ink: #0a0d11; --line: rgba(127, 214, 230, .34);
+  --ease: cubic-bezier(.22, .8, .2, 1);
+}
+
+/* The room stays present; its edges quiet down while the console is open. */
+.runner-shade {
+  position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease;
+  background: radial-gradient(ellipse at 50% 50%, rgba(4, 6, 9, .18) 0%, rgba(4, 6, 9, .72) 100%);
+}
+.runner-layer[data-expanded="true"] .runner-shade { opacity: 1; }
+
+.runner-console {
+  position: absolute; left: 0; top: 0; transform-origin: 0 0; overflow: hidden; pointer-events: auto;
+  container-type: size; background: var(--ink); opacity: 0;
+  transition: transform .62s var(--ease), opacity .22s ease;
+}
+.runner-console[data-shown="true"] { opacity: 1; }
+.runner-console[data-swapping="true"] { opacity: 0; transition: opacity .16s ease; }
+.runner-console[data-closing="true"] { opacity: 0; transition: transform .62s var(--ease), opacity .2s ease; }
+.runner-console[data-closing="true"][data-collapse="true"] { transition: transform .62s var(--ease), opacity .2s ease .4s; }
+.runner-console canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* One hairline border, and a violet edge along the top. */
+.runner-frame { position: absolute; inset: 0; pointer-events: none; border: 1px solid var(--line); box-shadow: inset 0 1px 0 rgba(154, 136, 230, .55); }
+
+/* Screens share one stable surface and cross-fade in place. */
+.runner-screen {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; animation: runner-in .32s var(--ease) both; transition: opacity .28s ease;
+}
+.runner-screen[data-leaving="true"] { opacity: 0; pointer-events: none; }
+@keyframes runner-in { from { opacity: 0; } }
+.runner-menu {
+  background:
+    linear-gradient(rgba(127, 214, 230, .04) 1px, transparent 1px) 0 0 / 6cqmin 6cqmin,
+    linear-gradient(90deg, rgba(127, 214, 230, .04) 1px, transparent 1px) 0 0 / 6cqmin 6cqmin,
+    radial-gradient(ellipse at 50% 42%, rgba(10, 13, 17, .9), rgba(10, 13, 17, .66) 75%);
+}
+.runner-overlay { background: rgba(8, 11, 15, .92); }
+
+.runner-stack { display: flex; flex-direction: column; align-items: center; width: min(86cqw, 640px); padding-bottom: 3cqmin; }
+.runner-menu .runner-stack { transform: translateY(-3cqmin); }
+
+.runner-screen h2 {
+  margin: 0; font: 700 min(9cqmin, 7.4cqw) / 1.05 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: .1em; color: #e8f3f5; padding-left: .1em;
+}
+.runner-screen .runner-title-sm { font-size: min(6.4cqmin, 6cqw); }
+.runner-sub { margin: 3.4cqmin 0 0; display: flex; flex-direction: column; gap: .8cqmin; font-size: max(11px, min(2.8cqmin, 3.2cqw)); letter-spacing: .22em; color: #8ba4ac; }
+.runner-sub span { display: block; padding-left: .24em; }
+
+/* Actions: thin outlined technical buttons. */
+.runner-actions { display: flex; flex-direction: column; align-items: stretch; gap: 1.6cqmin; width: min(60cqw, 300px); margin-top: 4.6cqmin; }
+.runner-menu .runner-stack > .runner-primary { margin-top: 6cqmin; }
+.runner-screen button {
+  font: 600 max(12px, min(2.7cqmin, 3.4cqw)) / 1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .2em;
+  min-height: max(44px, 8.6cqmin); padding: 0 2.6em; color: #b4cbd0; background: transparent; border: 1px solid rgba(127, 214, 230, .3);
+  cursor: pointer; transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.runner-screen button:hover:not(:disabled) { background: rgba(127, 214, 230, .07); border-color: rgba(127, 214, 230, .75); color: #eaf8fa; }
+.runner-screen button:focus-visible { outline: 2px solid #9cc8ff; outline-offset: 3px; }
+.runner-screen button:disabled { cursor: default; opacity: .55; }
+.runner-screen .runner-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 1.6em; min-width: 15em; color: #eaf8fa;
+  border-color: rgba(127, 214, 230, .72); box-shadow: inset 0 -2px 0 rgba(154, 136, 230, .55);
+}
+.runner-primary span { display: inline-block; transition: transform .18s var(--ease); }
+.runner-primary:hover:not(:disabled) span { transform: translateX(4px); }
+.runner-screen .runner-actions button { padding: 0 1em; }
+
+.runner-best { margin-top: 3.6cqmin; font-size: max(11px, min(2.5cqmin, 3cqw)); letter-spacing: .16em; color: #6f8791; }
+.runner-best strong { margin-left: 1.2em; font-weight: 600; color: #dce9ea; letter-spacing: .08em; }
+
+.runner-controls {
+  position: absolute; left: 0; right: 0; bottom: 5cqmin; margin: 0; padding: 0; list-style: none; display: flex; justify-content: center;
+  flex-wrap: wrap; gap: .8cqmin 4cqmin; font-size: max(10px, min(2.2cqmin, 2.8cqw)); letter-spacing: .14em; color: #6f8791;
+}
+.runner-controls b { margin-right: .7em; font-weight: 600; color: #93aab1; }
+
+
+.runner-results { display: flex; gap: 8cqmin; margin: 4cqmin 0 0; }
+.runner-results div { display: flex; flex-direction: column; gap: 1.2cqmin; align-items: center; }
+.runner-results dt { font-size: max(11px, min(2.3cqmin, 2.9cqw)); letter-spacing: .2em; color: #6f8791; }
+.runner-results dd { margin: 0; font: 600 min(5.6cqmin, 7cqw) / 1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; color: #e8f3f5; }
+
+/* Touch controls, inside the console. */
+.runner-touch { position: absolute; left: 4cqmin; right: 4cqmin; bottom: 4cqmin; display: flex; align-items: end; justify-content: space-between; pointer-events: none; }
+.runner-touch button {
+  pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none; color: #dff7fa; border: 1px solid rgba(127, 214, 230, .5);
+  background: rgba(14, 24, 31, .9); border-radius: 8px; font: 600 20px ui-monospace, monospace;
+}
+.runner-pad { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(2, 52px); gap: 4px; }
+.runner-pad button { width: 52px; height: 52px; }
+.runner-pad-up { grid-column: 2; } .runner-pad-left { grid-column: 1; grid-row: 2; } .runner-pad-right { grid-column: 3; grid-row: 2; } .runner-pad-down { grid-column: 2; grid-row: 2; }
+.runner-touch .runner-pulse { width: 78px; height: 78px; border-radius: 50%; font-size: 11px; letter-spacing: .1em; margin-left: auto; margin-right: 12px; }
+.runner-touch .runner-touch-pause { position: absolute; right: 0; bottom: 98px; width: 44px; height: 44px; font-size: 16px; }
+
+.runner-mobile-hud { display: none; }
+@media (pointer: coarse) {
+  .runner-mobile-hud {
+    position: absolute; left: 4cqmin; right: 4cqmin; top: 3cqmin; display: grid; grid-template-columns: 1fr 1fr; gap: 9px 14px; pointer-events: none;
+    color: #77949d; font-size: 10px; letter-spacing: .1em;
+  }
+  .runner-mobile-hud span { display: flex; flex-direction: column; gap: 4px; }
+  .runner-mobile-hud strong { color: #dff6f8; font-size: 15px; letter-spacing: .03em; }
+  .runner-mobile-hud .runner-mobile-multiplier { color: #9cc8ff; font-size: 13px; justify-content: end; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runner-console, .runner-console[data-closing="true"], .runner-console[data-closing="true"][data-collapse="true"] { transition-duration: .1s; transition-delay: 0s; }
+  .runner-shade, .runner-screen button { transition-duration: .1s; }
+  .runner-screen { animation-duration: .1s; }
+}

@@ -1,0 +1,50 @@
+/* Skills detail, on the shared content shell: the workshop's amber and
+ * charcoal. The group and its note on the left, each skill with the work that
+ * lists it on the right. No ratings: evidence stands in for them. */
+
+.content-detail[data-tone="skills"] { border-top-color: rgba(224, 162, 76, .5); }
+/* A group is as tall as what it holds: a short group makes a short panel. */
+@media (min-width: 900px) and (min-aspect-ratio: 6/5) { .content-detail[data-tone="skills"] { bottom: auto; max-height: calc(100% - 124px); } }
+.skills-detail-grid {
+  display: grid; grid-template-columns: minmax(0, 34fr) minmax(0, 66fr); gap: clamp(24px, 3.4vw, 56px); padding: clamp(22px, 2.6vw, 40px);
+  animation: content-rise .38s ease-out both;
+}
+.skills-identity { position: sticky; top: 0; align-self: start; }
+.skills-identity h2 { margin: 0; font: 600 clamp(28px, 2.6vw, 40px) / 1.1 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.skills-note { margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--line); font-size: 17px; line-height: 1.6; color: #dde3e5; }
+.skills-detail-grid .content-copy h3.skills-list-title { margin-top: 0; padding-top: 0; border-top: 0; }
+.skills-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.skills-list li { display: grid; grid-template-columns: minmax(140px, 32%) 1fr; gap: 16px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.skills-name { font: 600 17px "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); }
+.skills-name::before { content: ""; display: inline-block; width: 7px; height: 7px; margin: 0 10px 2px 0; background: var(--accent); }
+.skills-uses { display: flex; flex-wrap: wrap; gap: 6px; }
+.skills-use { display: inline-flex; align-items: baseline; gap: 6px; min-height: 34px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 2px; font: 500 14px var(--mono); color: #dde3e5; background: rgba(214, 228, 232, .03); cursor: pointer; transition: border-color .18s, background .18s; }
+.skills-use:hover { border-color: var(--accent); background: rgba(224, 162, 76, .08); }
+.skills-use small { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.skills-use { flex-wrap: wrap; white-space: nowrap; row-gap: 2px; }
+.skills-use em { flex-basis: 100%; font-style: normal; font-size: 12px; color: var(--muted); }
+.skills-unlisted { font-size: 14.5px; color: var(--muted); }
+.skills-evidence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 22px 0 0; border: 1px solid var(--line); background: var(--line); }
+.skills-evidence div { padding: 12px 14px; background: var(--graphite); }
+.skills-evidence div:last-child:nth-child(odd) { grid-column: span 2; }
+.skills-evidence dt { font: 600 11.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.skills-evidence dd { margin: 6px 0 0; font: 600 22px "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); }
+.skills-related { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.skills-related button { display: grid; gap: 6px; width: 100%; padding: 14px 16px; border: 1px solid var(--line); border-radius: 2px; background: rgba(214, 228, 232, .02); color: inherit; text-align: left; font: inherit; cursor: pointer; transition: border-color .18s, background .18s; }
+.skills-related button:hover { border-color: rgba(224, 162, 76, .55); background: rgba(224, 162, 76, .05); }
+.skills-related-head { display: flex; align-items: baseline; gap: 10px; }
+.skills-related-head small { font: 600 11.5px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.skills-related-head strong { font: 600 17px "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); }
+.skills-related-head > span { margin-left: auto; color: var(--muted); }
+.skills-related-summary { font-size: 16px; line-height: 1.55; color: #ced7da; max-width: 70ch; }
+.skills-related-uses { font: 500 13px var(--mono); color: var(--accent); }
+.skills-evidence-note { margin: 16px 0 0; font-size: 14.5px; line-height: 1.6; color: var(--muted); max-width: 72ch; }
+
+@media (max-width: 899px), (max-aspect-ratio: 6/5) {
+  .skills-detail-grid { grid-template-columns: 1fr; gap: 20px; padding: 20px 20px calc(80px + env(safe-area-inset-bottom)); }
+  .skills-identity { position: static; }
+}
+@media (max-width: 600px) {
+  .skills-list li { grid-template-columns: 1fr; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .skills-detail-grid { animation-duration: 1ms; } }

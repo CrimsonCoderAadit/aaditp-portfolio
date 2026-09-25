@@ -1,0 +1,14 @@
+{
+  "tracks": [
+    {
+      "id": "best-of-me",
+      "src": "/audio/game-mode/neffex-best-of-me.mp3",
+      "gain": 1
+    },
+    {
+      "id": "grateful",
+      "src": "/audio/game-mode/neffex-grateful.mp3",
+      "gain": 1
+    }
+  ]
+}

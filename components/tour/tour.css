@@ -1,0 +1,54 @@
+/* The guided tour's caption: a small editorial block in the lower-left safe
+ * area, in the hero's type, with no box behind the words. The city stays the
+ * subject; a soft scrim keeps the text legible over bright districts. */
+
+.guided-tour {
+  position: absolute; z-index: 25; left: max(6vw, env(safe-area-inset-left)); bottom: max(7vh, calc(env(safe-area-inset-bottom) + 24px));
+  max-width: min(460px, 88vw); color: #e6e4df; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  animation: tour-in .5s ease-out both;
+}
+.guided-tour::before {
+  content: ""; position: absolute; z-index: -1; inset: -48px -80px -40px -60px; pointer-events: none;
+  background: radial-gradient(ellipse at 30% 60%, rgba(8, 10, 12, .62), rgba(8, 10, 12, 0) 70%);
+}
+.guided-tour[data-exiting] { opacity: 0; transition: opacity .35s ease; pointer-events: none; }
+
+.guided-tour-caption { transition: opacity .35s ease; }
+.guided-tour-caption[data-moving] { opacity: .55; }
+.guided-tour-count { margin: 0 0 10px; font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .14em; color: #a4adb0; }
+.guided-tour-count span { color: #7fd6e6; }
+.guided-tour h2 { margin: 0; font-size: clamp(26px, 2.5vw, 38px); font-weight: 500; line-height: 1.1; letter-spacing: .02em; animation: tour-line .45s ease-out both; }
+.guided-tour-line { margin: 10px 0 0; font-size: clamp(16px, 1.2vw, 18px); line-height: 1.6; color: #dde1df; animation: tour-line .45s .06s ease-out both; }
+
+.guided-tour-progress { display: flex; gap: 6px; margin-top: 18px; }
+.guided-tour-progress i { width: 6px; height: 6px; border-radius: 50%; background: rgba(230, 228, 223, .22); transition: background .3s, transform .3s; }
+.guided-tour-progress i[data-state="past"] { background: rgba(230, 228, 223, .55); }
+.guided-tour-progress i[data-state="current"] { background: #7fd6e6; transform: scale(1.25); }
+
+.guided-tour-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.guided-tour-controls button {
+  min-height: 40px; padding: 0 14px; border: 1px solid #ffffff26; border-radius: 3px; background: #191b1dcc; color: #e6e4df; cursor: pointer;
+  font: inherit; font-size: 15px; letter-spacing: .03em; transition: background .18s, border-color .18s, opacity .18s;
+}
+.guided-tour-controls button span { color: #8e979a; }
+.guided-tour-controls button:hover:not(:disabled) { background: #303438; }
+.guided-tour-controls button.is-primary { border-color: #7fd6e680; }
+.guided-tour-controls button:disabled { opacity: .4; cursor: default; }
+.guided-tour-controls button:focus-visible { outline: 2px solid #c5c0b3; outline-offset: 3px; }
+.guided-tour-controls .guided-tour-skip { border-color: transparent; background: none; color: #aab5b8; text-decoration: underline; text-underline-offset: 3px; }
+
+@keyframes tour-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes tour-line { from { opacity: 0; transform: translateY(5px); } }
+
+/* Phones: the block spans the width above the music control's corner. */
+@media (max-width: 600px) {
+  .guided-tour { left: 20px; right: 20px; max-width: none; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 56px); }
+  .guided-tour h2 { font-size: 28px; }
+  .guided-tour-line { font-size: 16px; }
+  .guided-tour-controls button { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guided-tour, .guided-tour h2, .guided-tour-line { animation-duration: 1ms; animation-delay: 0s; }
+  .guided-tour-caption, .guided-tour-progress i { transition-duration: 1ms; }
+}

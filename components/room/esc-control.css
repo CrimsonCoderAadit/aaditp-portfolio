@@ -1,0 +1,12 @@
+.esc-control {
+  position: fixed; z-index: 70; top: max(14px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right));
+  display: inline-flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 14px 0 8px;
+  border: 1px solid #ffffff26; border-radius: 4px; background: #111418d9; color: #e6e9ec; cursor: pointer;
+  font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .16em; text-transform: uppercase;
+  box-shadow: 0 6px 24px #0006; transition: background .18s, border-color .18s;
+}
+.esc-control kbd { padding: 3px 6px; border: 1px solid #ffffff38; border-radius: 3px; color: #aeb6bf; font: inherit; font-size: 11px; letter-spacing: .08em; }
+.esc-control:hover:not(:disabled) { background: #1d2228f0; border-color: #ffffff4a; }
+.esc-control:focus-visible { outline: 2px solid #9be7b0; outline-offset: 3px; }
+.esc-control:disabled { opacity: .5; cursor: default; }
+@media (pointer: coarse) { .esc-control { padding: 0 16px; min-height: 44px; } .esc-control kbd { display: none; } }
