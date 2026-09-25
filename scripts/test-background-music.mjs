@@ -18,7 +18,7 @@ try {
  await sleep(3000);let s=await status();console.log('FIRST',JSON.stringify(s));
  check(s.active===0 && !s.tracks[0].paused && s.tracks[0].time>1,'first interaction starts Track A');
  check(s.master>.12 && s.master<=.16,'three-second fade reaches restrained gain');
- check(requests.some(url=>url.includes('Midnight%20Architecture')),'actual Track A requested');
+ check(requests.some(url=>url.includes('midnight-architecture')),'actual Track A requested');
  await page.evaluate(()=>{const m=window.__musicDebug;m.players[0].currentTime=m.players[0].duration-4;});
  await page.waitForFunction(()=>window.__musicDebug?.status().active===1,null,{timeout:15000});
  s=await status();console.log('A_TO_B',JSON.stringify(s));

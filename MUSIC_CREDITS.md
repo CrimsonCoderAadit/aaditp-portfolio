@@ -2,7 +2,7 @@
 
 ## Studio (ambient) soundtrack
 
-`public/music/Midnight Architecture.wav` and `public/music/Late Night Discovery.wav`: the room's
+`public/music/midnight-architecture.mp3` and `public/music/late-night-discovery.mp3` (224 kbps MP3, encoded from WAV masters kept outside the site in `media-sources/ambient/`): the room's
 existing ambient pair, unchanged.
 
 ## Game Mode soundtrack

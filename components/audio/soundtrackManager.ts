@@ -12,8 +12,8 @@
  * position. */
 
 const TRACKS = [
-  "/music/Midnight%20Architecture.wav",
-  "/music/Late%20Night%20Discovery.wav",
+  "/music/midnight-architecture.mp3",
+  "/music/late-night-discovery.mp3",
 ] as const;
 const STUDIO_LEVEL = .15;
 const FADE_IN = 2.8;
