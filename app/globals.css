@@ -103,27 +103,22 @@ body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font
 .identity { transition: opacity 700ms ease, transform 700ms cubic-bezier(.22, .8, .2, 1); }
 /* A tiny name tag for the city's hidden details. */
 .city-tag { display: inline-block; padding: 2px 6px; border: 1px solid #ffffff2a; border-radius: 2px; background: #121418e0; color: #dfe6ee; font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .22em; white-space: nowrap; }
-/* The hero's two companion actions, and the résumé when the hero is out of view. */
+/* The hero's invitation and the résumé's persistent global utility. */
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
 .hero-actions .tour-start { margin-top: 0; }
-.resume-link {
-  pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border: 1px solid #ffffff1c; border-radius: 3px;
-  background: #191b1d99; color: #e0ddd6; font-size: 15px; letter-spacing: .05em; text-decoration: none; transition: background .18s, border-color .18s, color .18s;
-}
-.resume-link:hover { background: #303438; color: #e6e4df; }
-.resume-link:focus-visible, .resume-utility:focus-visible { outline: 2px solid #c5c0b3; outline-offset: 4px; }
+.resume-utility:focus-visible { outline: 2px solid #c5c0b3; outline-offset: 4px; }
 .resume-utility {
-  position: absolute; z-index: 40; right: max(76px, calc(env(safe-area-inset-right) + 62px)); bottom: max(26px, env(safe-area-inset-bottom));
-  display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 13px; border: 1px solid #d5e4e44a; border-radius: 19px;
-  background: #131c22cf; color: #d3e7e8; font-size: 14px; letter-spacing: .06em; text-decoration: none; box-shadow: 0 4px 18px #0005;
-  transition: background .2s, border-color .2s; animation: resume-in 400ms ease both;
+  position: absolute; z-index: 40; right: max(26px, env(safe-area-inset-right)); bottom: calc(max(26px, env(safe-area-inset-bottom)) + 48px);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 108px; min-height: 44px; padding: 0 13px; border: 1px solid #d5e4e44a; border-radius: 3px;
+  background: #131c22e8; color: #d3e7e8; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-decoration: none; box-shadow: 0 4px 18px #0005;
+  transition: background .18s, border-color .18s, color .18s;
 }
 .resume-utility:hover { background: #1c3037; border-color: #9bcbd0; color: #fff; }
-.resume-utility svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-@keyframes resume-in { from { opacity: 0; } }
+.resume-utility svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: transform .18s ease; }
+.resume-utility:hover svg { transform: translate(1px, 1px); }
 @media (max-width: 600px) {
-  .resume-utility { right: max(64px, calc(env(safe-area-inset-right) + 58px)); bottom: max(16px, env(safe-area-inset-bottom)); width: 40px; height: 40px; padding: 0; justify-content: center; }
-  .resume-utility span { display: none; }
+  .workbench-hero .music-control { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 108px); }
+  .resume-utility { right: max(16px, env(safe-area-inset-right)); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 158px); min-width: 108px; min-height: 44px; }
 }
 /* A first visit's invitation under the city; it fades itself away. */
 .city-hint {
@@ -137,4 +132,4 @@ body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font
 .city-hint-coarse { display: none; }
 @media (pointer: coarse) { .city-hint-fine { display: none; } .city-hint-coarse { display: inline; } }
 @media (max-width: 900px) { .city-hint { bottom: calc(max(7vh, calc(env(safe-area-inset-bottom) + 24px)) + 150px); letter-spacing: .14em; } }
-@media (prefers-reduced-motion: reduce) { .city-hint, .resume-utility { transition-duration: 1ms; animation: none; } }
+@media (prefers-reduced-motion: reduce) { .city-hint, .resume-utility, .resume-utility svg { transition-duration: 1ms; } }

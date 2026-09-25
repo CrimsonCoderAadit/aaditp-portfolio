@@ -65,7 +65,7 @@ export default function AboutInterface() {
   return (
     <div className="about-experience">
       <EscControl label="Back to city" onPress={leave} />
-      <section className="about-reading" role="dialog" aria-modal="true" aria-labelledby="about-title">
+      <section className="about-reading" role="dialog" aria-modal="false" aria-labelledby="about-title">
         <div ref={scroller} className="about-scroll" tabIndex={-1}>
           <article className="about-page">
             <header className="about-hero">

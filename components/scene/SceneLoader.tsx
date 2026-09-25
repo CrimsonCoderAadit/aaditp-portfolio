@@ -272,11 +272,10 @@ function Experience({ resume }: { resume: string | null }) {
         {roomChrome && <div className="hero-actions">
           <button type="button" className="tour-start" data-fresh={tourFresh || undefined} disabled={viewpointMoving || !ready}
             onClick={() => setTouring(true)}>Take the tour <span aria-hidden="true">→</span></button>
-          {resume && <a className="resume-link" href={resume} download={RESUME.file}>Download résumé <span aria-hidden="true">↓</span></a>}
         </div>}
       </header>
-      {resume && !roomChrome && !gaming && <a className="resume-utility" href={resume} download={RESUME.file} aria-label="Download résumé (PDF)">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3.5-3.5L8 10l3.5-3.5M3 13.5h10" /></svg><span>Résumé</span>
+      {resume && !gaming && <a className="resume-utility" href={resume} download={RESUME.file} aria-label="Download Aadit Praveen Nath résumé">
+        <span>RÉSUMÉ</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m-3.5-3.5L8 10l3.5-3.5M3 13.5h10" /></svg>
       </a>}
       <CityHint />
       {touring && <GuidedTour />}
