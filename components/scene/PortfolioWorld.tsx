@@ -32,7 +32,7 @@ import SaberDisplay from "./SaberDisplay";
 import CabinetWorkshop from "./CabinetWorkshop";
 import MakerCart from "./MakerCart";
 import StarClock from "./StarClock";
-import QualityGovernor from "./QualityGovernor";
+import QualityGovernor, { calibration } from "./QualityGovernor";
 import TextureSharpness from "./TextureSharpness";
 import ShadowCadence from "./ShadowCadence";
 import { startup } from "./startup";
@@ -64,11 +64,12 @@ void pendingPixels?.catch(() => {});
 /** A failed or stalled mural never holds the poster up longer than this. */
 const WALLS_WAIT_MS = 8000;
 
-/** The poster stays up until the live scene draws steadily: a first frame can
- * still be uploading textures or finishing programs, so the hero is announced
- * only after a few back-to-back frames each under this, or at the latest after
- * WARM_FRAMES frames or WARM_MS, so a slow machine never waits on it. */
-const STEADY_MS = 50, STEADY_FRAMES = 3, WARM_FRAMES = 10, WARM_MS = 1500;
+/** The poster stays up while the first quality reading runs behind it (see
+ * QualityGovernor), so any change of quality happens out of sight, and then
+ * until the live scene draws steadily at its final quality: a few back-to-back
+ * frames each under STEADY_MS, or at most STEADY_WAIT_MS more. HOLD_CAP_MS
+ * bounds the whole wait, so a slow machine is never kept on the poster. */
+const STEADY_MS = 50, STEADY_FRAMES = 3, STEADY_WAIT_MS = 1000, HOLD_CAP_MS = 9000;
 
 /** Renders the scene itself (priority 1 takes over the canvas's render) so the
  * first frame waits for the hero's walls and for every program to compile in
@@ -80,7 +81,7 @@ function HeroFrame() {
   const invalidate = useThree((state) => state.invalidate);
   const [walls, setWalls] = useState(false);
   const done = useRef(false);
-  const warm = useRef({ start: 0, last: 0, frames: 0, steady: 0 });
+  const warm = useRef({ start: 0, last: 0, frames: 0, steady: 0, settledAt: 0 });
   useEffect(() => onSceneCover(() => { if (!sceneCovered()) invalidate(); }), [invalidate]);
   const stage = useRef<"waiting" | "compiling" | "live">("waiting");
   useEffect(() => {
@@ -106,10 +107,15 @@ function HeroFrame() {
     gl.render(scene, camera);
     if (done.current) return;
     const w = warm.current, now = performance.now();
-    if (!w.start) w.start = now;
+    if (!w.start) { w.start = now; calibration.begin(); }
+    w.frames++;
+    const held = now - w.start > HOLD_CAP_MS;
+    if (calibration.phase !== "settled" && !held) { w.last = now; invalidate(); return; }
+    // Steadiness counts only frames drawn at the settled quality.
+    if (!w.settledAt) { w.settledAt = now; w.steady = 0; }
     else w.steady = now - w.last < STEADY_MS ? w.steady + 1 : 0;
     w.last = now;
-    if (++w.frames < WARM_FRAMES && w.steady < STEADY_FRAMES && now - w.start < WARM_MS) { invalidate(); return; }
+    if (!held && w.steady < STEADY_FRAMES && now - w.settledAt < STEADY_WAIT_MS) { invalidate(); return; }
     done.current = true;
     performance.measure("studio:warm-frames", { start: w.start, end: now, detail: w.frames });
     requestAnimationFrame(() => startup("ready"));

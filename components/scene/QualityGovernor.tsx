@@ -7,22 +7,41 @@ import { isDistrictMode, useSceneTransition } from "./SceneTransition";
 
 /** Measures the live scene and steps quality down when it cannot keep up.
  *
- * Rendering is on demand, so only frames that follow straight on from a frame
- * that asked for another (camera travel, parallax, animation) are timed; the
- * gap between two such frames is what the visitor feels. Right after the hero
- * appears, the scene is drawn continuously for a few seconds to take a first
- * reading from real frames. Each reading is a batch of frames:
+ * The first reading is taken behind the hero poster: HeroFrame starts it with
+ * the first live frame and keeps the poster up until it settles, so resolution,
+ * shadow and brick changes, and the one shader recompile of a drop to low, all
+ * happen before the visitor sees the live scene. The scene is drawn back to
+ * back in short windows; each window may step the tier down, and the next one
+ * re-measures at the new tier, until a window holds, emergency is reached or
+ * CALIBRATE_CAP_MS passes.
+ *
+ * Afterwards rendering is on demand, so only frames that follow straight on
+ * from a frame that asked for another (camera travel, parallax, animation)
+ * are timed, in batches. For every reading:
  *
  *  - median over 150 ms: straight to emergency;
  *  - p95 over 45 ms or median over 40 ms (around 20 fps or worse): two tiers down;
  *  - p95 over 25 ms (under 40 fps at the slow end): one tier down;
  *  - otherwise the tier holds.
  *
- * Quality only ever goes down within a session, so it never oscillates, and a
- * second of frames after each change is ignored while it settles. */
+ * Quality only ever goes down within a session, so it never oscillates, and the
+ * first frames after each change (recompiles, uploads) are ignored. */
 const BATCH = 36;
-const CALIBRATE_MS = 3200;
-const SETTLE_MS = 1000;
+const WINDOW = 16, WINDOW_MS = 1500, CALIBRATE_CAP_MS = 6000;
+/** Frames skipped after a tier change while programs and buffers settle. */
+const SKIP_AFTER_CHANGE = 1;
+
+/** The first reading's progress, shared with HeroFrame. */
+export const calibration = {
+  phase: "waiting" as "waiting" | "running" | "settled",
+  startedAt: 0,
+  windowStart: 0,
+  begin() {
+    if (this.phase !== "waiting") return;
+    this.phase = "running";
+    this.startedAt = this.windowStart = performance.now();
+  },
+};
 
 function percentile(sorted: number[], fraction: number) {
   return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * fraction))];
@@ -67,17 +86,8 @@ export default function QualityGovernor() {
   const closeUp = settings.fullBricks || isDistrictMode(mode);
   useEffect(() => { setBrickDetail(closeUp); invalidate(); }, [closeUp, invalidate]);
 
-  const run = useRef({ last: 0, chained: false, gaps: [] as number[], quietUntil: 0, calibrateUntil: -1 });
-  useEffect(() => { run.current.gaps = []; run.current.quietUntil = performance.now() + SETTLE_MS; }, [tier]);
-
-  // The first reading starts with the hero on screen.
-  useEffect(() => {
-    const begin = () => { run.current.calibrateUntil = performance.now() + CALIBRATE_MS; run.current.quietUntil = performance.now() + 150; invalidate(); };
-    if (performance.getEntriesByName("studio:ready").length) { begin(); return; }
-    const listen = (event: Event) => { if ((event as CustomEvent).detail === "ready") begin(); };
-    window.addEventListener("studio-stage", listen);
-    return () => window.removeEventListener("studio-stage", listen);
-  }, [invalidate]);
+  const run = useRef({ last: 0, chained: false, gaps: [] as number[], skip: 0 });
+  useEffect(() => { run.current.gaps = []; run.current.skip = SKIP_AFTER_CHANGE; calibration.windowStart = performance.now(); }, [tier]);
 
   useEffect(() => {
     const target = window as Window & { __quality?: () => object };
@@ -88,20 +98,31 @@ export default function QualityGovernor() {
   // Runs after the scene has been drawn (priority above HeroFrame's).
   useFrame((state) => {
     const r = run.current, now = performance.now();
-    const calibrating = now < r.calibrateUntil;
-    if (r.chained && now >= r.quietUntil && !document.hidden) r.gaps.push(now - r.last);
-    r.last = now;
+    const calibrating = calibration.phase === "running";
     if (calibrating) state.invalidate();
+    if (r.chained && !document.hidden) { if (r.skip > 0) r.skip--; else r.gaps.push(now - r.last); }
+    r.last = now;
     // True when something in this frame asked for the next one.
     r.chained = state.internal.frames > 1 || calibrating;
-    const enough = r.gaps.length >= BATCH || (r.calibrateUntil > 0 && !calibrating && r.gaps.length >= 3);
-    if (!enough) return;
-    if (r.calibrateUntil > 0 && !calibrating) r.calibrateUntil = 0;
-    const steps = stepsDown(r.gaps);
-    r.gaps = [];
-    if (!steps) return;
-    const current = TIERS.indexOf(quality.get().tier);
-    quality.set(TIERS[Math.min(TIERS.length - 1, current + steps)] as Tier);
+    const step = () => {
+      const steps = stepsDown(r.gaps);
+      r.gaps = [];
+      const current = TIERS.indexOf(quality.get().tier);
+      if (steps && current < TIERS.length - 1) { quality.set(TIERS[Math.min(TIERS.length - 1, current + steps)] as Tier); return true; }
+      return false;
+    };
+    if (calibrating) {
+      const settle = () => { calibration.phase = "settled"; r.gaps = []; };
+      // Past the cap, whatever was measured still decides, once.
+      if (now - calibration.startedAt > CALIBRATE_CAP_MS) { if (r.gaps.length) step(); settle(); return; }
+      // A window closes after WINDOW frames, or after WINDOW_MS with any frame:
+      // on a very slow machine a single frame is already the answer.
+      if (r.gaps.length < WINDOW && !(now - calibration.windowStart > WINDOW_MS && r.gaps.length >= 1)) return;
+      calibration.windowStart = now;
+      if (!step()) settle();
+      return;
+    }
+    if (calibration.phase === "settled" && r.gaps.length >= BATCH) step();
   }, 2);
   return null;
 }
