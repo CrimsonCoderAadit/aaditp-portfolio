@@ -99,6 +99,8 @@ function applyDetail(geometry: BufferGeometry, full: boolean) {
   geometry.clearGroups();
 }
 
+export const brickDetailFull = () => brickDetail.full;
+
 /** Full molded bricks, or plain boxes. */
 export function setBrickDetail(full: boolean) {
   if (brickDetail.full === full) return;

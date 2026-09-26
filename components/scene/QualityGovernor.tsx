@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import type { DirectionalLight } from "three";
-import { quality, TIER_SETTINGS, TIERS, useTier, type Tier } from "./quality";
+import { quality, rememberTier, TIER_SETTINGS, TIERS, useTier, type Tier } from "./quality";
+import { frameClock } from "./frameClock";
 import { setBrickDetail } from "./brickGeometry/moldedEdges";
 import { isDistrictMode, useSceneTransition } from "./SceneTransition";
 
@@ -22,10 +23,12 @@ import { isDistrictMode, useSceneTransition } from "./SceneTransition";
  *  - median over 150 ms: straight to emergency;
  *  - p95 over 45 ms or median over 40 ms (around 20 fps or worse): two tiers down;
  *  - p95 over 25 ms (under 40 fps at the slow end): one tier down;
+ *  (on the 30 fps-capped tiers each limit is 15 ms higher)
  *  - otherwise the tier holds.
  *
  * Quality only ever goes down within a session, so it never oscillates, and the
- * first frames after each change (recompiles, uploads) are ignored. */
+ * first frames after each change (recompiles, uploads) are ignored. The tier a
+ * device settles on is remembered, so its next visit starts there. */
 const BATCH = 36;
 const WINDOW = 16, WINDOW_MS = 1500, CALIBRATE_CAP_MS = 6000;
 /** Frames skipped after a tier change while programs and buffers settle. */
@@ -47,12 +50,14 @@ function percentile(sorted: number[], fraction: number) {
   return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * fraction))];
 }
 
-export function stepsDown(gaps: number[]) {
+/** `budget` is the p95 frame time a tier should hold: 25 ms normally, 40 ms on
+ * tiers capped at 30 fps, whose frames are ~33 ms by design. */
+export function stepsDown(gaps: number[], budget = 25) {
   const sorted = [...gaps].sort((a, b) => a - b);
   const median = percentile(sorted, .5), p95 = percentile(sorted, .95);
   if (median > 150) return TIERS.length;
-  if (p95 > 45 || median > 40) return 2;
-  if (p95 > 25) return 1;
+  if (p95 > budget + 20 || median > budget + 15) return 2;
+  if (p95 > budget) return 1;
   return 0;
 }
 
@@ -100,19 +105,20 @@ export default function QualityGovernor() {
     const r = run.current, now = performance.now();
     const calibrating = calibration.phase === "running";
     if (calibrating) state.invalidate();
+    if (!frameClock.rendered) return;
     if (r.chained && !document.hidden) { if (r.skip > 0) r.skip--; else r.gaps.push(now - r.last); }
     r.last = now;
     // True when something in this frame asked for the next one.
     r.chained = state.internal.frames > 1 || calibrating;
     const step = () => {
-      const steps = stepsDown(r.gaps);
+      const steps = stepsDown(r.gaps, quality.settings().frameCapMs ? 40 : 25);
       r.gaps = [];
       const current = TIERS.indexOf(quality.get().tier);
-      if (steps && current < TIERS.length - 1) { quality.set(TIERS[Math.min(TIERS.length - 1, current + steps)] as Tier); return true; }
+      if (steps && current < TIERS.length - 1) { quality.set(TIERS[Math.min(TIERS.length - 1, current + steps)] as Tier); rememberTier(); return true; }
       return false;
     };
     if (calibrating) {
-      const settle = () => { calibration.phase = "settled"; r.gaps = []; };
+      const settle = () => { calibration.phase = "settled"; r.gaps = []; rememberTier(); };
       // Past the cap, whatever was measured still decides, once.
       if (now - calibration.startedAt > CALIBRATE_CAP_MS) { if (r.gaps.length) step(); settle(); return; }
       // A window closes after WINDOW frames, or after WINDOW_MS with any frame:

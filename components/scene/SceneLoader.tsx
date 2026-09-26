@@ -190,6 +190,19 @@ function Experience({ resume }: { resume: string | null }) {
   // Games take the whole screen and its attention: the résumé steps aside.
   const gaming = mode.startsWith("terminal") || roomFocus === "media";
   const ready = useHeroReady();
+  // Once the hero is live, the sections' code downloads while the visitor looks
+  // around, so a first visit to any of them never waits on the network.
+  useEffect(() => {
+    if (!ready) return;
+    const fetchSections = () => {
+      void import("../projects/ProjectsInterface"); void import("../experience/ExperienceInterface");
+      void import("../research/ResearchInterface"); void import("../skills/SkillsInterface");
+      void import("../about/AboutInterface"); void import("../achievements/AchievementsInterface");
+      void import("../contact/ContactInterface"); void import("../tour/GuidedTour");
+    };
+    const idle = window.requestIdleCallback ?? ((callback: () => void) => window.setTimeout(callback, 1500));
+    idle(fetchSections, { timeout: 4000 });
+  }, [ready]);
   // The tour invitation asks for a little attention until it has been taken once
   // this session; the server render never depends on it.
   const tourFresh = useSyncExternalStore(noSubscription, tourUnseen, () => false);

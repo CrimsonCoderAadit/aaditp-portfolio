@@ -33,6 +33,10 @@ import CabinetWorkshop from "./CabinetWorkshop";
 import MakerCart from "./MakerCart";
 import StarClock from "./StarClock";
 import QualityGovernor, { calibration } from "./QualityGovernor";
+import { frameClock } from "./frameClock";
+import { quality } from "./quality";
+import { brickDetailFull, setBrickDetail } from "./brickGeometry/moldedEdges";
+import type { Material, Mesh, Scene, Texture, WebGLRenderer } from "three";
 import TextureSharpness from "./TextureSharpness";
 import ShadowCadence from "./ShadowCadence";
 import { startup } from "./startup";
@@ -71,6 +75,25 @@ const WALLS_WAIT_MS = 8000;
  * bounds the whole wait, so a slow machine is never kept on the poster. */
 const STEADY_MS = 50, STEADY_FRAMES = 3, STEADY_WAIT_MS = 1000, HOLD_CAP_MS = 9000;
 
+/** Everything a first visit to a district would otherwise prepare on the spot,
+ * done behind the poster: every texture in the scene is uploaded, and on tiers
+ * that simplify bricks, one frame is drawn with full close-up bricks so their
+ * buffers are on the GPU before any district is entered. */
+function prewarm(gl: WebGLRenderer, scene: Scene, render: () => void) {
+  const seen = new Set<Texture>();
+  scene.traverse((object) => {
+    const material = (object as Mesh).material;
+    if (!material) return;
+    for (const m of (Array.isArray(material) ? material : [material]) as (Material & Record<string, unknown>)[]) {
+      for (const value of Object.values(m)) {
+        const texture = value as Texture | null;
+        if (texture && (texture as Texture).isTexture && !seen.has(texture) && texture.image) { seen.add(texture); gl.initTexture(texture); }
+      }
+    }
+  });
+  if (!brickDetailFull()) { setBrickDetail(true); render(); setBrickDetail(false); }
+}
+
 /** Renders the scene itself (priority 1 takes over the canvas's render) so the
  * first frame waits for the hero's walls and for every program to compile in
  * parallel, instead of compiling them one by one inside that frame. While a
@@ -81,6 +104,7 @@ function HeroFrame() {
   const invalidate = useThree((state) => state.invalidate);
   const [walls, setWalls] = useState(false);
   const done = useRef(false);
+  const lastDrawn = useRef(0);
   const warm = useRef({ start: 0, last: 0, frames: 0, steady: 0, settledAt: 0 });
   useEffect(() => onSceneCover(() => { if (!sceneCovered()) invalidate(); }), [invalidate]);
   const stage = useRef<"waiting" | "compiling" | "live">("waiting");
@@ -100,11 +124,20 @@ function HeroFrame() {
     if (!walls) return;
     if (stage.current === "waiting") {
       stage.current = "compiling";
-      void gl.compileAsync(scene, camera).catch(() => {}).then(() => { stage.current = "live"; invalidate(); });
+      void gl.compileAsync(scene, camera).catch(() => {}).then(() => {
+        try { prewarm(gl, scene, () => gl.render(scene, camera)); } catch { /* best effort */ }
+        stage.current = "live"; invalidate();
+      });
       return;
     }
+    frameClock.rendered = false;
     if (stage.current === "compiling" || (done.current && sceneCovered())) return;
+    // Capped tiers draw at most every frameCapMs; skipped frames still ask for the next.
+    const cap = quality.settings().frameCapMs, now0 = performance.now();
+    if (done.current && cap && now0 - lastDrawn.current < cap) { invalidate(); return; }
+    lastDrawn.current = now0;
     gl.render(scene, camera);
+    frameClock.rendered = true;
     if (done.current) return;
     const w = warm.current, now = performance.now();
     if (!w.start) { w.start = now; calibration.begin(); }
